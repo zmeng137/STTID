@@ -1,2 +1,2 @@
 # STTID
-STTID: High-Performance Tensor-Train Interpolative Decomposition
+STTID: High-Performance Sparse Tensor-Train Interpolative Decomposition
