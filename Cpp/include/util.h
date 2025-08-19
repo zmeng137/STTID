@@ -69,13 +69,14 @@ private:
   static std::map<std::string, double> min_time_;
   static std::map<std::string, int> counts_;
 
-};
+}; 
 
 template<size_t Order>
 bool read_sparse_tensor(const std::string& filename, 
                        std::array<size_t*, Order>& indices,
-                       double* values,
-                       size_t num_entries) {
+                       std::array<size_t,  Order>& dimensions,
+                       double* values, size_t num_entries, 
+                       bool binary,    size_t idx_offset) {
     std::ifstream file(filename);
     if (!file.is_open()) {
         std::cout << "err 1\n";
@@ -95,7 +96,10 @@ bool read_sparse_tensor(const std::string& filename,
         
         // Read indices for each dimension
         for (size_t dim = 0; dim < Order; ++dim) {
-            if (!(iss >> indices[dim][entry])) {
+            if (iss >> indices[dim][entry]) {
+                // Index offset 
+                indices[dim][entry] -= idx_offset;
+            } else {
                 // Cleanup on error
                 for (size_t i = 0; i < Order; ++i) {
                     delete[] indices[i];
@@ -106,16 +110,28 @@ bool read_sparse_tensor(const std::string& filename,
         }
         
         // Read the value
-        if (!(iss >> values[entry])) {
+        if (!binary) {
+            if (!(iss >> values[entry])) {
             // Cleanup on error
-            for (size_t i = 0; i < Order; ++i) {
-                delete[] indices[i];
+                for (size_t i = 0; i < Order; ++i) {
+                    delete[] indices[i];
+                }
+                std::cout << "err 1\n";
+                return false;
             }
-            std::cout << "err 1\n";
-            return false;
-        }
+        } 
         
         ++entry;
+    }
+
+    // If the tensor is binary (such as wiki knowledge graph), the value array is directly initialized by 1
+    if (binary) {
+        std::fill(values, values + entry, 1.0);
+    }
+
+    // Identify the tensor size by finding the maximum mode indices 
+    for (size_t i = 0; i < Order; ++i) {
+        dimensions[i] = *std::max_element(indices[i], indices[i] + entry) + idx_offset;
     }
 
     file.close();

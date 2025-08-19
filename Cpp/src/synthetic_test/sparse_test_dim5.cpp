@@ -12,9 +12,9 @@
 
 int main(int argc, char* argv[]) 
 { 
-    if (argc != 11) {
-        std::cerr << "Error: Expected 10 arguments, got " << (argc - 1) << std::endl;
-        std::cerr << "Usage: " << argv[0] << " <data_file_path> <nnz> <order1> <order2> <order3> <order4> <order5> <rmax> <epsilon> <spthres>" << std::endl;
+    if (argc != 13) {
+        std::cerr << "Error: Expected 12 arguments, got " << (argc - 1) << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <data_file_path> <nnz> <order1> <order2> <order3> <order4> <order5> <rmax> <epsilon> <spthres> <binary> <idx_offset>" << std::endl;
         return 1;
     }  
     
@@ -34,16 +34,15 @@ int main(int argc, char* argv[])
     size_t r_max = std::stoll(argv[8]);
     double eps = std::stod(argv[9]);
     double spthres = std::stod(argv[10]);
+    bool binary = std::stoi(argv[11]);
+    size_t idx_offset = std::stoll(argv[12]);
     bool verbose = false;  
     bool ifEval = false;  
 
-    std::cout << "Tensor file: " << filepath << "\n"
-              << "Nonzero count: " << num_entries << "\n";
-    for (size_t i = 0; i < dimensions.size(); ++i) 
-        std::cout << "Dimension " << i << ": " << dimensions[i] << "\n";
-    std::cout << "r_max: " << r_max << "\n" 
-              << "tolerance: " << eps << "\n"
-              << "spthres: " << spthres << std::endl;
+    // Print loading info
+    std::cout << "Tensor file: " << filepath << "\n" << "Nonzero count: " << num_entries << "\n";
+    std::cout << "r_max: " << r_max << "\n" << "tolerance: " << eps << "\n" << "spthres: " << spthres << std::endl;
+    for (size_t i = 0; i < dimensions.size(); ++i) std::cout << "Dimension input by argument [" << i << "]: " << dimensions[i] << "\n";
     //-------------------------------------------//
 
     // Create arrays to store the data
@@ -52,7 +51,8 @@ int main(int argc, char* argv[])
     bool data_lf;
     
     {util::Timer timer("Data load");  // Read the data
-    data_lf = util::read_sparse_tensor<Order>(filepath, indices, values, num_entries);}
+    data_lf = util::read_sparse_tensor<Order>(filepath, indices, dimensions, values, num_entries, binary, idx_offset);}
+    
     if (data_lf) {
         // Print the input data
         std::cout << "The input tensor in COO format is as follows:\n";
@@ -68,6 +68,8 @@ int main(int argc, char* argv[])
            std::cout << values[j] << "  ";     
         }
         std::cout << "...\n";
+
+        for (size_t i = 0; i < dimensions.size(); ++i) std::cout << "Dimension after data loading [" << i << "]: " << dimensions[i] << "\n";
 
         // Construct tensor
         COOTensor<double, Order> Tensor;
