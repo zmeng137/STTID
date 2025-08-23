@@ -8,7 +8,7 @@
 
 // Tools
 #include "util.h"
-#include "cutil.h"
+//#include "cutil.h"
 
 int main(int argc, char* argv[]) 
 { 
@@ -24,10 +24,6 @@ int main(int argc, char* argv[])
     const size_t Order = 4;    
     size_t num_entries = std::stoll(argv[2]); 
     std::array<size_t, Order> dimensions;
-    dimensions[0] = std::stoll(argv[3]);
-    dimensions[1] = std::stoll(argv[4]);
-    dimensions[2] = std::stoll(argv[5]);
-    dimensions[3] = std::stoll(argv[6]);
 
     // Tensor-train algorithm settings
     size_t r_max = std::stoll(argv[7]);
@@ -35,13 +31,15 @@ int main(int argc, char* argv[])
     double spthres = std::stod(argv[9]);
     bool binary = std::stoi(argv[10]);
     size_t idx_offset = std::stoll(argv[11]);
-    bool verbose = false;   
-    bool ifEval = false;
+    
+    // Flags
+    bool check_flag = false;   
+    bool cross_flag = true;
+    bool ifEval = true;
 
     // Print loading info
     std::cout << "Tensor file: " << filepath << "\n" << "Nonzero count: " << num_entries << "\n";
     std::cout << "r_max: " << r_max << "\n" << "tolerance: " << eps << "\n" << "spthres: " << spthres << std::endl;
-    for (size_t i = 0; i < dimensions.size(); ++i) std::cout << "Dimension input by argument [" << i << "]: " << dimensions[i] << "\n";
     //-------------------------------------------//
 
     // Create arrays to store the data
@@ -51,7 +49,16 @@ int main(int argc, char* argv[])
     
     {util::Timer timer("Data load");  // Read the data
     data_lf = util::read_sparse_tensor<Order>(filepath, indices, dimensions, values, num_entries, binary, idx_offset);}
-    
+
+    // Adaptive dimensions
+    std::cout << "Dimension of the input tensor: ";
+    for (size_t i = 0; i < dimensions.size(); ++i) {
+        size_t temp = std::stoll(argv[3 + i]);
+        dimensions[i] = std::max(dimensions[i], temp);
+        std::cout << dimensions[i] << ", ";
+    }
+    std::cout << "\n";
+
     // Print the input data
     if (data_lf) {
         std::cout << "The input tensor in COO format is as follows:\n";
@@ -68,8 +75,6 @@ int main(int argc, char* argv[])
         }
         std::cout << "...\n";
 
-        for (size_t i = 0; i < dimensions.size(); ++i) std::cout << "Dimension after data loading [" << i << "]: " << dimensions[i] << "\n";
-
         // Construct tensor
         COOTensor<double, Order> Tensor;
         Tensor.dimensions = dimensions;
@@ -78,15 +83,15 @@ int main(int argc, char* argv[])
         Tensor.indices = indices;
         Tensor.values = values;
         
-        // Sparse TTID algorithm
         // Memory logger
         //util::HostMemoryLogger host_mem_logger("gpu_main_memory_usage.csv", 100);
         //util::DeviceMemoryLogger device_mem_logger("gpu_device_memory_usage.csv", 1000, 0);
-        util::getCuversion();  // Get CUDA info
+        //util::getCuversion();  // Get CUDA info
+        
+        // Sparse TTID algorithm
         std::cout << "SPARSE TT-ID STARTS:\n";
-        
-        
-        auto ttList = TT_ID_sparse(Tensor, eps, spthres, r_max, verbose);
+        auto ttList = TT_ID_sparse(Tensor, eps, r_max, spthres, check_flag, cross_flag);
+        std::cout << "SPARSE TT-ID ENDS:\n";
         
         // Output information display
         if (ifEval) {
@@ -102,10 +107,10 @@ int main(int argc, char* argv[])
             ttList.InterG[1].write_to_file("1_TTcore_no2.tns");
             ttList.EndG.write_to_file("1_TTcore_no3.tns");
             
-            auto reconT = SparseTTtoTensor<double>(ttList.StartG, ttList.InterG[0], ttList.InterG[1], ttList.EndG);
-            std::cout << "Reconstructed tensor -- " << reconT << "\n";
-            double err = Tensor.rel_diff(reconT);
-            std::cout << "Relative reconstruction error = " << err << std::endl;
+            //auto reconT = SparseTTtoTensor<double>(ttList.StartG, ttList.InterG[0], ttList.InterG[1], ttList.EndG);
+            //std::cout << "Reconstructed tensor -- " << reconT << "\n";
+            //double err = Tensor.rel_diff(reconT);
+            //std::cout << "Relative reconstruction error = " << err << std::endl;
         }
         
         // Timer summary
