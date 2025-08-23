@@ -796,15 +796,15 @@ struct SparseTTRes {
 };
 
 // Declare the template function of TT-ID
-template<typename T, size_t Order>
-SparseTTRes TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff, 
-                double const spthres, size_t const r_max, bool verbose);
-
+template<typename T, size_t Order> SparseTTRes 
+TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff, size_t const r_max,
+             double const spthres, bool check_flag, bool cross_flag);
+              
 // Explicitly declare the specializations you'll use
-extern template SparseTTRes TT_ID_sparse<double, 3>(const COOTensor<double, 3>&, double, double, size_t, bool);
-extern template SparseTTRes TT_ID_sparse<double, 4>(const COOTensor<double, 4>&, double, double, size_t, bool);
-extern template SparseTTRes TT_ID_sparse<double, 5>(const COOTensor<double, 5>&, double, double, size_t, bool);
-extern template SparseTTRes TT_ID_sparse<double, 6>(const COOTensor<double, 6>&, double, double, size_t, bool);
+extern template SparseTTRes TT_ID_sparse<double, 3>(const COOTensor<double, 3>&, double, size_t, double, bool, bool);
+extern template SparseTTRes TT_ID_sparse<double, 4>(const COOTensor<double, 4>&, double, size_t, double, bool, bool);
+extern template SparseTTRes TT_ID_sparse<double, 5>(const COOTensor<double, 5>&, double, size_t, double, bool, bool);
+extern template SparseTTRes TT_ID_sparse<double, 6>(const COOTensor<double, 6>&, double, size_t, double, bool, bool);
 // Add other specializations as needed
 
 #endif

@@ -406,10 +406,31 @@ struct COOMatrix_l2 {
         return;
     }
 
+    // Select sub-rows of the sparse COO matrix
+    COOMatrix_l2<T> subrow(const long long* pivot_rows, long long rank) {
+        // Initialize the resulting sparse matrix
+        COOMatrix_l2<T> result(rank, cols);
+
+        // Select rows from the row-pivot array
+        for (long long i = 0; i < nnz_count; ++i) {
+            long long row_idx = row_indices[i];
+            for (long long j = 0; j < rank; ++j) {
+                long long prow_idx = pivot_rows[j];
+                if (prow_idx == row_idx) {
+                    result.add_element(j, col_indices[i], values[i]);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    // Select sub-columns of the sparse COO matrix
     COOMatrix_l2<T> subcol(const long long* pivot_cols, long long rank) {
+        // Initialize the resulting sparse matrix
         COOMatrix_l2<T> result(rows, rank);
         
-        // Select columns from pivot column array
+        // Select columns from the column-pivot array
         for (long long i = 0; i < nnz_count; ++i) {
             long long col_idx = col_indices[i];
             for (long long j = 0; j < rank; ++j) {

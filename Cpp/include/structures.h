@@ -25,11 +25,12 @@ namespace decompRes {
         // Rank and permutation
         bool isSparseRes;   // If sparse result 
         bool isFullReturn;  // If full return
-        T inf_error;   // Inference error
-        long long rank;   // Real revealed rank
-        long long output_rank; // Output rank
+        T inf_error;        // Inference error
+        long long rank;     // Real revealed rank
+        long long output_rank;  // Output rank
         long long* row_perm_inv = nullptr; // Inverse permutation row
         long long* col_perm_inv = nullptr; // Inverse permutation column
+        long long* piv_rows = nullptr;     // Permutation row indices
         long long* piv_cols = nullptr;     // Permutation column indices
         
         // Memory release
@@ -41,6 +42,7 @@ namespace decompRes {
             if (dense_U11 != nullptr) delete[] dense_U11;
             if (row_perm_inv != nullptr) delete[] row_perm_inv;
             if (col_perm_inv != nullptr) delete[] col_perm_inv;
+            if (piv_rows != nullptr) delete[] piv_rows;
             if (piv_cols != nullptr) delete[] piv_cols;
             //sparse_L.~COOMatrix_l2<T>();
             //sparse_U.~COOMatrix_l2<T>();
@@ -54,8 +56,9 @@ namespace decompRes {
     struct SparseInterpRes {
         T* C = nullptr;  // Return data when fullReturn
         T* Z = nullptr;  // Return data when fullReturn
-        T* interp_coeff = nullptr;    // Return data when not fullReturn
-        long long* pivot_cols = nullptr; // Pivoted columns 
+        T* interp_coeff = nullptr;        // Return data when not fullReturn
+        long long* pivot_cols = nullptr;  // Column pivots 
+        long long* pivot_rows = nullptr;  // Row pivots
         long long rank;  // Detected rank of matrix
         long long output_rank; // Output(Truncated) rank
         bool isFullReturn;
@@ -65,6 +68,7 @@ namespace decompRes {
             if (Z != nullptr) delete[] Z;
             if (interp_coeff != nullptr) delete[] interp_coeff;
             if (pivot_cols != nullptr) delete[] pivot_cols;
+            if (pivot_rows != nullptr) delete[] pivot_rows;
         };
     };
 
