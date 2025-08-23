@@ -340,15 +340,25 @@ dSparse_Interpolative_GPU_l3(COOMatrix_l2<double> const M, double const cutoff,
     long long Nr = M.rows;
     long long Nc = M.cols;
 
-    // Get pivot columns (CPU part)
+    // Get pivot rows and columns (CPU part)
     idResult.pivot_cols = new long long[Nc];
-    long long* d_pivot_cols, *d_col_perm_inv;
+    long long* d_pivot_cols, *d_pivot_rows, *d_col_perm_inv, *d_row_perm_inv;
+    
+    util::CHECK_CUDART_ERROR(cudaMalloc(&d_row_perm_inv, Nr * sizeof(long long)));
     util::CHECK_CUDART_ERROR(cudaMalloc(&d_col_perm_inv, Nc * sizeof(long long)));
+    util::CHECK_CUDART_ERROR(cudaMalloc(&d_pivot_rows,   Nr * sizeof(long long)));
     util::CHECK_CUDART_ERROR(cudaMalloc(&d_pivot_cols,   Nc * sizeof(long long)));
+    util::CHECK_CUDART_ERROR(cudaMemcpy(d_row_perm_inv, prrlduResult.row_perm_inv, Nr * sizeof(long long), cudaMemcpyHostToDevice));
     util::CHECK_CUDART_ERROR(cudaMemcpy(d_col_perm_inv, prrlduResult.col_perm_inv, Nc * sizeof(long long), cudaMemcpyHostToDevice));
+    
+    perm_inv_gpu(d_pivot_rows, d_row_perm_inv, Nr);
     perm_inv_gpu(d_pivot_cols, d_col_perm_inv, Nc);
-    util::CHECK_CUDART_ERROR(cudaMemcpy(idResult.pivot_cols, d_pivot_cols, Nc * sizeof(long long), cudaMemcpyDeviceToHost));   
+    
+    util::CHECK_CUDART_ERROR(cudaMemcpy(idResult.pivot_rows, d_pivot_rows, Nr * sizeof(long long), cudaMemcpyDeviceToHost));
+    util::CHECK_CUDART_ERROR(cudaMemcpy(idResult.pivot_cols, d_pivot_cols, Nc * sizeof(long long), cudaMemcpyDeviceToHost));          
+    util::CHECK_CUDART_ERROR(cudaFree(d_row_perm_inv));
     util::CHECK_CUDART_ERROR(cudaFree(d_col_perm_inv));
+    util::CHECK_CUDART_ERROR(cudaFree(d_pivot_rows));
     util::CHECK_CUDART_ERROR(cudaFree(d_pivot_cols));
 
     /*

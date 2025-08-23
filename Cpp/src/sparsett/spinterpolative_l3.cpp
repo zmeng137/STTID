@@ -345,6 +345,19 @@ dSparse_Interpolative_CPU_l3(COOMatrix_l2<double> const M, double const cutoff,
         idResult.pivot_cols[i] = idx;
     }
 
+    // Get pivot rows (CPU part)
+    idResult.pivot_rows = new long long[Nr];
+    for (long long i = 0; i < Nr; ++i) {
+        long long idx;
+        for (long long j = 0; j < Nr; ++j) {
+            if (prrlduResult.row_perm_inv[j] == i) {
+                idx = j;
+                break;
+            }     
+        }
+        idResult.pivot_rows[i] = idx;
+    }
+
     // Allocate memory for interpolative coefficients
     if (output_rank * (Nc - output_rank) != 0) {
         idResult.interp_coeff = new double[output_rank * (Nc - output_rank)]{0.0};
