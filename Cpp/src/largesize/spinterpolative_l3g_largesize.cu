@@ -211,7 +211,10 @@ dSparse_PartialRRLDU_GPU_l3(COOMatrix_l2<double> const M_, double const cutoff,
     resultSet.isSparseRes = !denseFlag;    // Dense or Sparse result
     resultSet.isFullReturn = isFullReturn; // Full or non-full return
 
+    // Pivots
     resultSet.piv_cols = new long long[maxdim]{0};
+    resultSet.piv_rows = new long long[maxdim]{0};
+    
     for (long long i = 0; i < maxdim; ++i) {
         auto it = cps.find(i);
         if (it != cps.end()) {
@@ -221,8 +224,17 @@ dSparse_PartialRRLDU_GPU_l3(COOMatrix_l2<double> const M_, double const cutoff,
         }
     }
 
-    std::cout << "PRRLDU - Second Phase: L/U update starts.\n";
+    for (long long i = 0; i < maxdim; ++i) {
+        auto it = rps.find(i);
+        if (it != rps.end()) {
+            resultSet.piv_rows[i] = rps[i];
+        } else {
+            resultSet.piv_rows[i] = i;
+        }
+    }
+
     // Whether dense LU factors or not 
+    std::cout << "PRRLDU - Second Phase: L/U update starts.\n";
     if (denseFlag) {   
        
     } else {
@@ -299,7 +311,9 @@ dSparse_Interpolative_GPU_l3(COOMatrix_l2<double> const M, double const cutoff,
     idResult.rank = prrlduResult.rank;
     idResult.output_rank = prrlduResult.output_rank;
     idResult.pivot_cols = new long long[maxdim];
+    idResult.pivot_rows = new long long[maxdim];
     std::copy(prrlduResult.piv_cols, prrlduResult.piv_cols + maxdim, idResult.pivot_cols);
+    std::copy(prrlduResult.piv_rows, prrlduResult.piv_rows + maxdim, idResult.pivot_rows);
 
     long long output_rank = prrlduResult.output_rank;
     long long Nr = M.rows;
@@ -318,23 +332,25 @@ dSparse_Interpolative_GPU_l3(COOMatrix_l2<double> const M, double const cutoff,
     {        
         // Sparse U -> Sparse interpolation
         util::Timer timer("Interp-coeff Comp (Sparse)");
-        if (Nc != output_rank + 1)
-        mkl_trsv_idkernel(idResult, prrlduResult, output_rank, Nc);    // CPU MKL kernel
-        //cusparse_trsv_idkernel_3(idResult, prrlduResult, output_rank, Nc); // GPU CUSPARSE kernel
+        //if (Nc != output_rank + 1)
+        //mkl_trsv_idkernel(idResult, prrlduResult, output_rank, Nc);    // CPU MKL kernel
+        
+        // slow!
+        ////cusparse_trsv_idkernel_3(idResult, prrlduResult, output_rank, Nc); // GPU CUSPARSE kernel
     }
     else {
         // Dense U -> Dense interpolation
         util::Timer timer("Interp-coeff Comp (Dense)");
-        double* U11 = new double[output_rank * output_rank]{0.0};
-        double* b = new double[output_rank]{0.0};
+        //double* U11 = new double[output_rank * output_rank]{0.0};
+        //double* b = new double[output_rank]{0.0};
         //util::PrintMatWindow(prrlduResult.dense_U, output_rank, Nc, {0, output_rank-1}, {0, Nc-1});
 
         // Dense triangular solver
-        denseTRSV_interp(prrlduResult, U11, b, Nc, output_rank, idResult);
+        //denseTRSV_interp(prrlduResult, U11, b, Nc, output_rank, idResult);
 
         // Memory release
-        delete[] b;
-        delete[] U11;
+        //delete[] b;
+        //delete[] U11;
     }   
 
     // Memory release

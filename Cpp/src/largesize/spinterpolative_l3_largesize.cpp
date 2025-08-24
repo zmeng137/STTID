@@ -226,6 +226,8 @@ dSparse_PartialRRLDU_CPU_l3(COOMatrix_l2<double> const M_, double const cutoff,
 
     // Create inverse permutations
     resultSet.piv_cols = new long long[maxdim]{0};
+    resultSet.piv_rows = new long long[maxdim]{0};
+
     for (long long i = 0; i < maxdim; ++i) {
         auto it = cps.find(i);
         if (it != cps.end()) {
@@ -235,8 +237,17 @@ dSparse_PartialRRLDU_CPU_l3(COOMatrix_l2<double> const M_, double const cutoff,
         }
     }
 
-    std::cout << "PRRLDU - Second Phase: L/U update starts.\n";
+    for (long long i = 0; i < maxdim; ++i) {
+        auto it = rps.find(i);
+        if (it != rps.end()) {
+            resultSet.piv_rows[i] = rps[i];
+        } else {
+            resultSet.piv_rows[i] = i;
+        }
+    }
+
     // Whether dense LU factors or not 
+    std::cout << "PRRLDU - Second Phase: L/U update starts.\n";
     if (denseFlag) {   
       
     } else {
@@ -312,7 +323,9 @@ dSparse_Interpolative_CPU_l3(COOMatrix_l2<double> const M, double const cutoff,
     idResult.rank = prrlduResult.rank;
     idResult.output_rank = prrlduResult.output_rank;
     idResult.pivot_cols = new long long[maxdim];
+    idResult.pivot_rows = new long long[maxdim];
     std::copy(prrlduResult.piv_cols, prrlduResult.piv_cols + maxdim, idResult.pivot_cols);
+    std::copy(prrlduResult.piv_rows, prrlduResult.piv_rows + maxdim, idResult.pivot_rows);        
 
     long long output_rank = prrlduResult.output_rank;
     long long Nr = M.rows;

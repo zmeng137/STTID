@@ -2,18 +2,20 @@
 #include "spfunctions.h"
 #include "util.h"
 
-//#define ENABLE_GPU
+#define ENABLE_GPU
 
 // Define the template function TT_ID_sparse
-template<typename T, size_t Order>
-SparseTTRes TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff, 
-                double const spthres, size_t const r_max, bool verbose) {
+template<typename T, size_t Order> SparseTTRes 
+TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff, size_t const r_max,
+             double const spthres, bool check_flag, bool cross_flag) 
+{
     util::Timer timer("Tensor train decomp");
 
-    // Initial settings
-    auto shape = tensor.get_dimensions(); // Get the shape of the input tensor: [n1, n2, ..., nd]
-    int dim = shape.size();               // Get the number of dimension d
-    size_t nbar = 1;                      // Get the total size: n1 * n2 * ... * nd
+    auto shape = tensor.get_dimensions();  // Get the shape of the input tensor: [n1, n2, ..., nd]
+    int dim = shape.size();                // Get the number of dimension d
+    
+    // Get the total size: n1 * n2 * ... * nd
+    size_t nbar = 1;
     for (int i = 0; i < dim; ++i)
         nbar *= shape[i];
 
@@ -21,18 +23,23 @@ SparseTTRes TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff,
     size_t r = 1;                           // Rank
     size_t row = nbar / r / shape[dim - 1]; // Initial matrix row
     size_t col = r * shape[dim - 1];        // Initial matrix column
+    
+    // Tensor -- reshape --> Matrix
     COOMatrix_l2<T> W = tensor.reshape2Matl2(row, col);
+
+    // Open a file for recording number of nonzeros for TT-factors (either one-side ID or two-side CROSS format)
+    std::ofstream outFile("nnz_log.txt");
+    if (!outFile.is_open()) 
+        std::cerr << "Error opening file!" << std::endl;
 
     // Initialize a result list, start TT iteration
     SparseTTRes ResList;
     ResList.InterG.resize(dim - 2);
-    for (int i = dim - 1; i > 0; i--)
-    {
+    for (int i = dim - 1; i > 0; i--) {
         std::cout << "Tensor train iteration " << i << " starts..." << std::endl;
 
         // Reshape matrix (skip the first iteration)
-        if (i != dim - 1)
-        {
+        if (i != dim - 1) {
             row = nbar / r / shape[i]; // Matrix row
             col = r * shape[i];        // Matrix column
             W.reshape(row, col);
@@ -49,6 +56,18 @@ SparseTTRes TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff,
         size_t ri = idResult.output_rank;
 
         //auto Z = dcoeffZReconCPU(idResult.interp_coeff, idResult.pivot_cols, ri, col);
+
+        // CROSS format NNZs
+        if (cross_flag) {
+            auto row_subset = W.subrow(idResult.pivot_rows, ri);
+            if (i == dim - 1)
+                outFile << "CROSS (two-side ID) Format TT-factor (i.e. Row skeleton)" << std::endl;
+            outFile << "Mode " << i << " NNZs: " << row_subset.nnz_count << std::endl; 
+        } else {
+            if (i == dim - 1)
+                outFile << "ID (one-side ID) Format TT-factor (i.e. Interpolation)" << std::endl;
+            outFile << "Mode " << i << " NNZs: " << "NaN! Did not compute the interpolation matrix" << std::endl; //<< Z.nnz_count << std::endl;
+        }
 
         // Form a new tensor-train factor
         /*if (i == dim - 1) {
@@ -79,6 +98,10 @@ SparseTTRes TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff,
     // Append the last factor
     ResList.StartG.reset(W.nnz_count, W.rows, W.cols);
     ResList.StartG.nnz_count = W.nnz_count;
+
+    outFile << "Mode " << 0 << " NNZs: " << W.nnz_count << std::endl;
+    outFile.close();
+
     std::copy(W.values, W.values + W.nnz_count, ResList.StartG.values);
     std::copy(W.row_indices, W.row_indices + W.nnz_count, ResList.StartG.indices[0]);
     std::copy(W.col_indices, W.col_indices + W.nnz_count, ResList.StartG.indices[1]);
@@ -86,7 +109,7 @@ SparseTTRes TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff,
 }
 
 // Explicitly instantiate the specializations
-template SparseTTRes TT_ID_sparse<double, 3>(const COOTensor<double, 3>&, double, double, size_t, bool);
-template SparseTTRes TT_ID_sparse<double, 4>(const COOTensor<double, 4>&, double, double, size_t, bool);
-template SparseTTRes TT_ID_sparse<double, 5>(const COOTensor<double, 5>&, double, double, size_t, bool);
-template SparseTTRes TT_ID_sparse<double, 6>(const COOTensor<double, 6>&, double, double, size_t, bool);
+template SparseTTRes TT_ID_sparse<double, 3>(const COOTensor<double, 3>&, double, size_t, double, bool, bool);
+template SparseTTRes TT_ID_sparse<double, 4>(const COOTensor<double, 4>&, double, size_t, double, bool, bool);
+template SparseTTRes TT_ID_sparse<double, 5>(const COOTensor<double, 5>&, double, size_t, double, bool, bool);
+template SparseTTRes TT_ID_sparse<double, 6>(const COOTensor<double, 6>&, double, size_t, double, bool, bool);
