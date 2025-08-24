@@ -342,6 +342,7 @@ dSparse_Interpolative_GPU_l3(COOMatrix_l2<double> const M, double const cutoff,
 
     // Get pivot rows and columns (CPU part)
     idResult.pivot_cols = new long long[Nc];
+    idResult.pivot_rows = new long long[Nr];
     long long* d_pivot_cols, *d_pivot_rows, *d_col_perm_inv, *d_row_perm_inv;
     
     util::CHECK_CUDART_ERROR(cudaMalloc(&d_row_perm_inv, Nr * sizeof(long long)));
