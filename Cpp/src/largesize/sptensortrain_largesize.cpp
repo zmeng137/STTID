@@ -15,7 +15,7 @@ TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff, size_t cons
     int dim = shape.size();                // Get the number of dimension d
     
     // Get the total size: n1 * n2 * ... * nd
-    size_t nbar = 1;
+    __int128_t nbar = 1;  // For some tensors with very large dimensions, we need 128bit int
     for (int i = 0; i < dim; ++i)
         nbar *= shape[i];
 
@@ -88,7 +88,9 @@ TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff, size_t cons
         }*/
 
         // Form new W from the interpolative factor C
-        nbar = nbar * ri / shape[i] / r; // New total size of W
+        nbar = nbar * ri;
+        nbar = nbar / shape[i] / r; // New total size of W
+        
         r = ri;
         W = W.subcol(idResult.pivot_cols, ri);
 
