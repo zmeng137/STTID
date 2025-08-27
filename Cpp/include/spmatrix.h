@@ -304,6 +304,8 @@ struct COOMatrix_l2 {
     // In-place reshape
     void reshape(long long new_row, long long new_col) {
         if (new_row * new_col != rows * cols) {
+            std::cout << "old row: " << rows    << ", old column: " << cols    << "\n";
+            std::cout << "new row: " << new_row << ", new column: " << new_col << std::endl;
             throw std::runtime_error("New shape does not match with the original dimension!");
         }
         // Reshape
