@@ -24,5 +24,6 @@ decompRes::SparseInterpRes<double> dSparse_Interpolative_GPU_l3(COOMatrix_l2<dou
 
 // Z reconstruction
 COOMatrix_l2<double> dcoeffZReconCPU(double* coeffMatrix, long long* pivot_col, long long rank, long long col);
+COOMatrix_l2<double> dcoeffZReconCPU(COOMatrix_l2<double> sparse_coeff_mat, std::unordered_map<long long, long long> cps, long long rank, long long col);
 
 #endif

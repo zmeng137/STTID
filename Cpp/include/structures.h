@@ -28,11 +28,17 @@ namespace decompRes {
         T inf_error;        // Inference error
         long long rank;     // Real revealed rank
         long long output_rank;  // Output rank
-        long long* row_perm_inv = nullptr; // Inverse permutation row
-        long long* col_perm_inv = nullptr; // Inverse permutation column
-        long long* piv_rows = nullptr;     // Permutation row indices
-        long long* piv_cols = nullptr;     // Permutation column indices
         
+        // Inverse permutation row/column
+        long long* row_perm_inv = nullptr; 
+        long long* col_perm_inv = nullptr; 
+        
+        // Permutation row/column indices
+        std::unordered_map<long long, long long> rps;
+        std::unordered_map<long long, long long> cps;
+        long long* piv_rows = nullptr;    
+        long long* piv_cols = nullptr;    
+
         // Memory release
         void freeSpLduRes() {
             if (d != nullptr) delete[] d;
@@ -56,9 +62,15 @@ namespace decompRes {
     struct SparseInterpRes {
         T* C = nullptr;  // Return data when fullReturn
         T* Z = nullptr;  // Return data when fullReturn
-        T* interp_coeff = nullptr;        // Return data when not fullReturn
+        
+        T* interp_coeff = nullptr;            // Return interpolation coefficients when not fullReturn
+        COOMatrix_l2<T> sparse_interp_coeff;  // Return interpolation coefficients in sparse format (large size) when not fullReturn
+        
         long long* pivot_cols = nullptr;  // Column pivots 
         long long* pivot_rows = nullptr;  // Row pivots
+        std::unordered_map<long long, long long> rps;
+        std::unordered_map<long long, long long> cps;
+
         long long rank;  // Detected rank of matrix
         long long output_rank; // Output(Truncated) rank
         bool isFullReturn;
@@ -69,6 +81,7 @@ namespace decompRes {
             if (interp_coeff != nullptr) delete[] interp_coeff;
             if (pivot_cols != nullptr) delete[] pivot_cols;
             if (pivot_rows != nullptr) delete[] pivot_rows;
+            //sparse_interp_coeff.~COOMatrix_l2<T>();
         };
     };
 
