@@ -68,7 +68,6 @@ dSparse_PartialRRLDU_CPU_l3(COOMatrix_l2<double> const M_, double const cutoff,
             break;
         }
 
-
         // Update diagonal entries
         resultSet.d[s] = Mdenom; 
 
@@ -246,6 +245,9 @@ dSparse_PartialRRLDU_CPU_l3(COOMatrix_l2<double> const M_, double const cutoff,
         }
     }
 
+    resultSet.rps = rps;
+    resultSet.cps = cps;
+
     // Whether dense LU factors or not 
     std::cout << "PRRLDU - Second Phase: L/U update starts.\n";
     if (denseFlag) {   
@@ -326,26 +328,24 @@ dSparse_Interpolative_CPU_l3(COOMatrix_l2<double> const M, double const cutoff,
     idResult.pivot_rows = new long long[maxdim];
     std::copy(prrlduResult.piv_cols, prrlduResult.piv_cols + maxdim, idResult.pivot_cols);
     std::copy(prrlduResult.piv_rows, prrlduResult.piv_rows + maxdim, idResult.pivot_rows);        
+    idResult.rps = prrlduResult.rps;
+    idResult.cps = prrlduResult.cps;
 
     long long output_rank = prrlduResult.output_rank;
     long long Nr = M.rows;
     long long Nc = M.cols;
 
     std::cout << "Get interpolative coefficients...\n";
-    // Allocate memory for interpolative coefficients
     if (output_rank * (Nc - output_rank) != 0) {
-        //idResult.interp_coeff = new double[output_rank * (Nc - output_rank)]{0.0};
-    } else {
-        //idResult.interp_coeff = nullptr;
+        idResult.sparse_interp_coeff.reconst(output_rank, Nc - output_rank);
     }
             
     // Interpolation coefficients
-    if (prrlduResult.isSparseRes) 
-    {        
+    if (prrlduResult.isSparseRes) {        
         // Sparse U -> Sparse interpolation
         util::Timer timer("Interp-coeff Comp (Sparse)");
-        //if (Nc != output_rank + 1)
-        //mkl_trsv_idkernel(idResult, prrlduResult, output_rank, Nc);   
+        if (Nc != output_rank + 1)
+            mkl_trsv_idkernel(idResult.sparse_interp_coeff, prrlduResult, output_rank, Nc);   
     }
     else {
         // Dense U -> Dense interpolation
@@ -370,4 +370,47 @@ dSparse_Interpolative_CPU_l3(COOMatrix_l2<double> const M, double const cutoff,
 
     std::cout << "Sparse interpolative decomposition l3 (double CPU) ends.\n";
     return idResult;
+}
+
+COOMatrix_l2<double> dcoeffZReconCPU(COOMatrix_l2<double> sparse_coeff_mat, std::unordered_map<long long, long long> cps, long long rank, long long col)
+{
+    COOMatrix_l2<double> Z(rank, col);
+    
+    // Identity part
+    //for (long long i = 0; i < rank; ++i) {
+    //    Z.add_element(i, pivot_col[i], 1.0);
+    //}
+    
+    for (long long i = 0; i < rank; ++i) {
+        Z.add_element(i, cps[i], 1.0);
+    }
+
+    // Coefficient part
+    //for (long long i = rank; i < col; ++i) {   
+    //    for (long long r = 0; r < rank; ++r) {
+    //        double ele = coeffMatrix[r * (col - rank) + (i - rank)];
+    //        if (std::abs(ele) > 1e-14) {
+    //            Z.add_element(r, pivot_col[i], ele);
+    //        }
+    //    }
+    //}
+
+
+    long long coeff_nnz = sparse_coeff_mat.nnz_count;
+    for (long long nz = 0; nz < coeff_nnz; ++nz) {
+        auto coeff_mat_ridx = sparse_coeff_mat.row_indices[nz];
+        auto coeff_mat_cidx = sparse_coeff_mat.col_indices[nz];
+        auto coeff_mat_val  = sparse_coeff_mat.values[nz];
+ 
+        auto i = coeff_mat_cidx + rank;
+        auto it = cps.find(i);
+        if (it != cps.end()) {
+            Z.add_element(coeff_mat_ridx, cps[i], coeff_mat_val);
+        } else {
+            Z.add_element(coeff_mat_ridx, i, coeff_mat_val); 
+        }
+        
+    }
+
+    return Z;
 }

@@ -55,14 +55,14 @@ TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff, size_t cons
         // There is no cutoff selection. Rank is revealed automatically by IDQR
         size_t ri = idResult.output_rank;
 
-        //auto Z = dcoeffZReconCPU(idResult.interp_coeff, idResult.pivot_cols, ri, col);
+        auto Z = dcoeffZReconCPU(idResult.sparse_interp_coeff, idResult.cps, ri, col);
 
         // CROSS format NNZs
         if (cross_flag) {
             auto row_subset = W.subrow(idResult.pivot_rows, ri);
             if (i == dim - 1)
                 outFile << "CROSS (two-side ID) Format TT-factor (i.e. Row skeleton)" << std::endl;
-            outFile << "Mode " << i << " NNZs: " << row_subset.nnz_count << std::endl; 
+            outFile << "Mode " << i << " Core [" << ri << ", " << shape[i] << ", " << r << "] NNZs: " << row_subset.nnz_count << std::endl; 
         } else {
             if (i == dim - 1)
                 outFile << "ID (one-side ID) Format TT-factor (i.e. Interpolation)" << std::endl;
@@ -70,7 +70,7 @@ TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff, size_t cons
         }
 
         // Form a new tensor-train factor
-        /*if (i == dim - 1) {
+        if (i == dim - 1) {
             ResList.EndG.reset(Z.nnz_count, ri, shape[i]);
             ResList.EndG.nnz_count = Z.nnz_count;
             std::copy(Z.values, Z.values + Z.nnz_count, ResList.EndG.values);
@@ -85,7 +85,7 @@ TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff, size_t cons
                 ResList.InterG[i - 1].indices[1][n] = Z.col_indices[n] / r;
                 ResList.InterG[i - 1].indices[2][n] = Z.col_indices[n] % r;
             }
-        }*/
+        }
 
         // Form new W from the interpolative factor C
         nbar = nbar * ri;
@@ -101,7 +101,7 @@ TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff, size_t cons
     ResList.StartG.reset(W.nnz_count, W.rows, W.cols);
     ResList.StartG.nnz_count = W.nnz_count;
 
-    outFile << "Mode " << 0 << " NNZs: " << W.nnz_count << std::endl;
+    outFile << "Mode " << 0 << " Core [" << 1 << ", " << shape[0] << ", " << r << "] NNZs: " << W.nnz_count << std::endl;
     outFile.close();
 
     std::copy(W.values, W.values + W.nnz_count, ResList.StartG.values);

@@ -233,6 +233,9 @@ dSparse_PartialRRLDU_GPU_l3(COOMatrix_l2<double> const M_, double const cutoff,
         }
     }
 
+    resultSet.rps = rps;
+    resultSet.cps = cps;
+
     // Whether dense LU factors or not 
     std::cout << "PRRLDU - Second Phase: L/U update starts.\n";
     if (denseFlag) {   
@@ -314,26 +317,24 @@ dSparse_Interpolative_GPU_l3(COOMatrix_l2<double> const M, double const cutoff,
     idResult.pivot_rows = new long long[maxdim];
     std::copy(prrlduResult.piv_cols, prrlduResult.piv_cols + maxdim, idResult.pivot_cols);
     std::copy(prrlduResult.piv_rows, prrlduResult.piv_rows + maxdim, idResult.pivot_rows);
+    idResult.rps = prrlduResult.rps;
+    idResult.cps = prrlduResult.cps;
 
     long long output_rank = prrlduResult.output_rank;
     long long Nr = M.rows;
     long long Nc = M.cols;
 
     std::cout << "Get interpolative coefficients...\n";
-    // Allocate memory for interpolative coefficients
     if (output_rank * (Nc - output_rank) != 0) {
-        //idResult.interp_coeff = new double[output_rank * (Nc - output_rank)]{0.0};
-    } else {
-        //idResult.interp_coeff = nullptr;
+        idResult.sparse_interp_coeff.reconst(output_rank, Nc - output_rank);
     }
             
     // Interpolation coefficients
-    if (prrlduResult.isSparseRes) 
-    {        
+    if (prrlduResult.isSparseRes) {        
         // Sparse U -> Sparse interpolation
         util::Timer timer("Interp-coeff Comp (Sparse)");
-        //if (Nc != output_rank + 1)
-        //mkl_trsv_idkernel(idResult, prrlduResult, output_rank, Nc);    // CPU MKL kernel
+        if (Nc != output_rank + 1)
+            mkl_trsv_idkernel(idResult.sparse_interp_coeff, prrlduResult, output_rank, Nc);    // CPU MKL kernel
         
         // slow!
         ////cusparse_trsv_idkernel_3(idResult, prrlduResult, output_rank, Nc); // GPU CUSPARSE kernel

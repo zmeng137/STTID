@@ -7,7 +7,7 @@
 #include <mkl/mkl_spblas.h>
 
 void mkl_trsv_idkernel(
-        decompRes::SparseInterpRes<double> idResult, 
+        COOMatrix_l2<double>& sparse_interp_coeff,
         decompRes::SparsePrrlduRes<double> prrlduResult,
         long long output_rank, long long Nc)        
 {
@@ -54,15 +54,13 @@ void mkl_trsv_idkernel(
 
     // Compute the interpolative coefficients through solving upper triangular systems
     std::cout << "Sptrsv (MKL sparse blase CPU) for coefficients starts.\n";
-    for (long long i = 0; i < Nc - output_rank; ++i)
-    {
+    for (long long i = 0; i < Nc - output_rank; ++i) {
         // Right hand side b (one column of the U)
         memset(b, 0, sizeof(double) * output_rank);
         long long row_end = cscB_col_start[i + 1];
         long long row_start = cscB_col_start[i];
         long long interval = row_end - row_start;
-        for (long long j = 0; j < interval; ++j)
-        {
+        for (long long j = 0; j < interval; ++j) {
             double tval = cscB_values[row_start + j];
             long long bri = cscB_row_ind[row_start + j];
             b[bri] = tval;
@@ -73,8 +71,13 @@ void mkl_trsv_idkernel(
         util::CHECK_MKL_ERROR(mkl_sparse_d_trsv(SPARSE_OPERATION_NON_TRANSPOSE, 1.0, csrU11, descr, b, x));}
 
         // Copy the solution to iU11 columns
-        //for (long long j = 0; j < output_rank; ++j)
-        //    idResult.interp_coeff[j * (Nc - output_rank) + i] = x[j];
+        double hard_thres = 1e-14;
+        for (long long j = 0; j < output_rank; ++j) {
+            double coeff = x[j];
+            if (std::abs(coeff) > hard_thres) {
+                sparse_interp_coeff.add_element(j, i, coeff);
+            }
+        }
     }
 
     // Clean up
