@@ -96,21 +96,28 @@ int main(int argc, char* argv[])
         // Output information display
         if (ifEval) {
             util::Timer timer("Result evaluation");
-            // Sparse information
-            std::cout << "OUTPUT INFO:\n"; 
-            std::cout << "Output core F1 --" << ttList.StartG << "\n";
-            std::cout << "Output core F2 --" << ttList.InterG[0] << "\n";
-            std::cout << "Output core F3 --" << ttList.InterG[1] << "\n"; 
-            std::cout << "Output core F4 --" << ttList.EndG << "\n";
-            ttList.StartG.write_to_file("1_TTcore_no0.tns");
-            ttList.InterG[0].write_to_file("1_TTcore_no1.tns");
-            ttList.InterG[1].write_to_file("1_TTcore_no2.tns");
-            ttList.EndG.write_to_file("1_TTcore_no3.tns");
-            
-            //auto reconT = SparseTTtoTensor<double>(ttList.StartG, ttList.InterG[0], ttList.InterG[1], ttList.EndG);
-            //std::cout << "Reconstructed tensor -- " << reconT << "\n";
-            //double err = Tensor.rel_diff(reconT);
-            //std::cout << "Relative reconstruction error = " << err << std::endl;
+            if (!cross_flag) {
+                // Sparse information
+                std::cout << "OUTPUT INFO:\n"; 
+                std::cout << "Output core G1 --" << ttList.StartG << "\n";
+                std::cout << "Output core G2 --" << ttList.InterG[0] << "\n";
+                std::cout << "Output core G3 --" << ttList.InterG[1] << "\n"; 
+                std::cout << "Output core G4 --" << ttList.EndG << "\n";
+
+                std::filesystem::path execPath = argv[0];
+                std::filesystem::path execDir = execPath.parent_path();  // Get the directory containing the executable
+                ttList.StartG.write_to_file(execDir / "TTcore_no0.tns");
+                ttList.InterG[0].write_to_file(execDir / "TTcore_no1.tns");
+                ttList.InterG[1].write_to_file(execDir / "TTcore_no2.tns");
+                ttList.EndG.write_to_file(execDir / "TTcore_no3.tns");
+                
+                auto reconT = SparseTTtoTensor<double>(ttList.StartG, ttList.InterG[0], ttList.InterG[1], ttList.EndG);
+                std::cout << "Reconstructed tensor -- " << reconT << "\n";
+                double err = Tensor.rel_diff(reconT);
+                std::cout << "Relative reconstruction error = " << err << std::endl;
+            } else {
+                std::cout << "The CROSS-format evaluation has not been finalized." << std::endl;
+            }
         }
         
         // Timer summary
