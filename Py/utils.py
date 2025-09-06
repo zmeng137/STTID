@@ -24,7 +24,6 @@ def MatrixSparseStat(matrix: np.array):
 
 # Show sparsity information of the input full (dense-format) tensor array 
 def TensorSparseStat(factors: list[np.array]):
-    print("The sparsity statistics of the input tensor is as follows ...")
     totalnnz = 0
     for i in range(len(factors)):
         factor = factors[i]
@@ -35,7 +34,7 @@ def TensorSparseStat(factors: list[np.array]):
         totalnnz += cntnzero
         sparsity = cntzero / size
         density = cntnzero / size
-        print(f"Tensor factor {i}: shape = {shape}, size = {size}, # zero = {cntzero}, sparsity = {sparsity}, # non-zero = {cntnzero}, density = {density}")
+        print(f"Tensor {i}: shape = {shape}, size = {size}, # zero = {cntzero}, sparsity = {sparsity}, # non-zero = {cntnzero}, density = {density}")
     print(f"Total number of non-zero: {totalnnz}\n\n")
     return
 

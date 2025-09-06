@@ -10,16 +10,14 @@ from tt_svd import TT_SVD
 from tt_cross import tensor_train_cross
 from utils import TensorSparseStat, read_from_tns
 
-'''
-FILENAME = "14.tns"
+FILENAME = "powerlaw_test_4d.tns"
 SHAPE = [10, 10, 10, 10]
-RANK = [1, 8, 28, 5, 1]
 script_dir = os.path.dirname(os.path.abspath(__file__))
-file_path = os.path.join(script_dir, '..', '..', 'TensorData', FILENAME)
+file_path = os.path.join(script_dir, '..', 'Data', FILENAME)
 Tensor = read_from_tns(file_path, SHAPE)
-dTensor = Tensor.todense()
-'''
+dense_tensor = Tensor.todense()
 
+'''
 mean = 0
 std = 1
 nnz = 250
@@ -34,20 +32,20 @@ sparse_matrix = sc.sparse.coo_matrix((values, (row_indices, col_indices)),
     
 # Convert to dense, reshape, then back to sparse representation
 dense_tensor = sparse_matrix.toarray().reshape(tensor_shape)
+'''
 
-
-rank_max = 200 #max(RANK)
+rank_max = 50 #max(RANK)
 eps = 1e-10
 TTCores, TTCross_cinv, TTCross_cninv, TTRank = TTID_PRRLU_2side(dense_tensor, rank_max, eps)
 
-TTCores_svd = TT_SVD(dense_tensor, rank_max, eps)
+#TTCores_svd = TT_SVD(dense_tensor, rank_max, eps)
 
 reconT = tl.tt_to_tensor(TTCores)
-reconT_svd = tl.tt_to_tensor(TTCores_svd)
+#reconT_svd = tl.tt_to_tensor(TTCores_svd)
 error = tl.norm(reconT - dense_tensor, 2) / tl.norm(dense_tensor, 2)
-error_svd = tl.norm(reconT_svd - dense_tensor, 2) / tl.norm(dense_tensor, 2)
+#error_svd = tl.norm(reconT_svd - dense_tensor, 2) / tl.norm(dense_tensor, 2)
 print(f"The reconstruction error of TT-ID is {error}")
-print(f"The reconstruction error of TT-SVD is {error_svd}")
+#print(f"The reconstruction error of TT-SVD is {error_svd}")
 
 print("The sparsity statistics of TT-cores is as follows ...")
 TensorSparseStat(TTCores)
@@ -57,4 +55,3 @@ TensorSparseStat(TTCross_cinv)
 
 print("The sparsity statistics of TTCross_cninv is as follows ...")
 TensorSparseStat(TTCross_cninv)
-
