@@ -318,7 +318,7 @@ dSparse_PartialRRLDU_GPU_l3(COOMatrix_l2<double> const M_, double const cutoff,
 
 decompRes::SparseInterpRes<double>
 dSparse_Interpolative_GPU_l3(COOMatrix_l2<double> const M, double const cutoff, 
-                        double const spthres, long long const maxdim)
+                        double const spthres, long long const maxdim, bool const isCrossReturn)
 {   
     std::cout << "Sparse interpolative decomposition l3 (double GPU) starts.\n";
     util::Timer timer("Sparse Interp Decomp (GPU)");

@@ -64,9 +64,9 @@ TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff, size_t cons
 
         // Sparse interpolative decomposition
         #ifdef ENABLE_GPU
-        auto idResult = dSparse_Interpolative_GPU_l3(W, cutoff, spthres, r_max);
+        auto idResult = dSparse_Interpolative_GPU_l3(W, cutoff, spthres, r_max, cross_flag);
         #else
-        auto idResult = dSparse_Interpolative_CPU_l3(W, cutoff, spthres, r_max);
+        auto idResult = dSparse_Interpolative_CPU_l3(W, cutoff, spthres, r_max, cross_flag);
         #endif
 
         // There is no cutoff selection. Rank is revealed automatically by IDQR
@@ -75,7 +75,7 @@ TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff, size_t cons
         auto Z = dcoeffZReconCPU(idResult.interp_coeff, idResult.pivot_cols, ri, col);
         // std::cout << "Factor Z nnz: " << Z.nnz_count << ", density: " << double(Z.nnz_count) / Z.cols / Z.rows << std::endl;
 
-        // CROSS format NNZs
+        // Output NNZs (either two-side CROSS format or one-side ID format)
         if (cross_flag) {
             auto row_subset = W.subrow(idResult.pivot_rows, ri);
             if (i == dim - 1)
