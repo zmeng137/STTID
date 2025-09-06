@@ -19,8 +19,7 @@ void mkl_trsv_idkernel(
     long long *U11_cooCols = prrlduResult.sparse_U11.col_indices;
     double *U11_cooVals = prrlduResult.sparse_U11.values;
     sparse_matrix_t cooU11, csrU11;
-    util::CHECK_MKL_ERROR(mkl_sparse_d_create_coo(&cooU11, SPARSE_INDEX_BASE_ZERO,
-                                                  U11_rows, U11_cols, U11_nnz, U11_cooRows, U11_cooCols, U11_cooVals));
+    util::CHECK_MKL_ERROR(mkl_sparse_d_create_coo(&cooU11, SPARSE_INDEX_BASE_ZERO, U11_rows, U11_cols, U11_nnz, U11_cooRows, U11_cooCols, U11_cooVals));
     util::CHECK_MKL_ERROR(mkl_sparse_convert_csr(cooU11, SPARSE_OPERATION_NON_TRANSPOSE, &csrU11));
 
     // Sparse-COO B -> CSC B
@@ -31,17 +30,15 @@ void mkl_trsv_idkernel(
     long long *B_cooCols = prrlduResult.sparse_B.col_indices;
     double *B_cooVals = prrlduResult.sparse_B.values;
     sparse_matrix_t cooB, cscB;
-    util::CHECK_MKL_ERROR(mkl_sparse_d_create_coo(&cooB, SPARSE_INDEX_BASE_ZERO,
-                                                  B_rows, B_cols, B_nnz, B_cooRows, B_cooCols, B_cooVals));
-
+    util::CHECK_MKL_ERROR(mkl_sparse_d_create_coo(&cooB, SPARSE_INDEX_BASE_ZERO, B_rows, B_cols, B_nnz, B_cooRows, B_cooCols, B_cooVals));
     util::CHECK_MKL_ERROR(mkl_sparse_convert_csr(cooB, SPARSE_OPERATION_TRANSPOSE, &cscB));
+    
     sparse_index_base_t indexing;
     long long *cscB_col_start;
     long long *cscB_col_end;
     long long *cscB_row_ind;
     double *cscB_values;
-    util::CHECK_MKL_ERROR(mkl_sparse_d_export_csr(cscB, &indexing, &B_rows, &B_cols,
-                                                  &cscB_col_start, &cscB_col_end, &cscB_row_ind, &cscB_values));
+    util::CHECK_MKL_ERROR(mkl_sparse_d_export_csr(cscB, &indexing, &B_rows, &B_cols, &cscB_col_start, &cscB_col_end, &cscB_row_ind, &cscB_values));
 
     double *b = new double[output_rank]{0.0};
     double *x = new double[output_rank]{0.0};
@@ -90,4 +87,49 @@ void mkl_trsv_idkernel(
     std::cout << "Sptrsv (MKL sparse blase CPU) for coefficients ends.\n";
 }
         
-        
+
+void mkl_trsv_crosskernel(
+        COOMatrix_l2<double>& sparse_cross_inv,
+        decompRes::SparsePrrlduRes<double> prrlduResult,
+        long long output_rank)        
+{
+    // Sparse-COO L -> CSR L
+    long long L_rows = prrlduResult.sparse_L.rows;
+    long long L_cols = prrlduResult.sparse_L.cols;
+    long long L_nnz  = prrlduResult.sparse_L.nnz_count;
+    long long *L_cooRows = prrlduResult.sparse_L.row_indices;
+    long long *L_cooCols = prrlduResult.sparse_L.col_indices;
+    double *L_cooVals = prrlduResult.sparse_L.values;
+    sparse_matrix_t cooL, csrL;
+    util::CHECK_MKL_ERROR(mkl_sparse_d_create_coo(&cooL, SPARSE_INDEX_BASE_ZERO, L_rows, L_cols, L_nnz, L_cooRows, L_cooCols, L_cooVals));
+    util::CHECK_MKL_ERROR(mkl_sparse_convert_csr(cooL, SPARSE_OPERATION_NON_TRANSPOSE, &csrL));
+    
+    matrix_descr descr_L;
+    descr_L.type = SPARSE_MATRIX_TYPE_TRIANGULAR;
+    descr_L.mode = SPARSE_FILL_MODE_LOWER;
+    descr_L.diag = SPARSE_DIAG_NON_UNIT;  // or SPARSE_DIAG_UNIT if unit diagonal
+
+    // Sparse-COO U -> CSR U
+    long long U_rows = prrlduResult.sparse_U.rows;
+    long long U_cols = prrlduResult.sparse_U.cols;
+    long long U_nnz  = prrlduResult.sparse_U.nnz_count;
+    long long *U_cooRows = prrlduResult.sparse_U.row_indices;
+    long long *U_cooCols = prrlduResult.sparse_U.col_indices;
+    double *U_cooVals = prrlduResult.sparse_U.values;
+    sparse_matrix_t cooU, csrU;
+    util::CHECK_MKL_ERROR(mkl_sparse_d_create_coo(&cooU, SPARSE_INDEX_BASE_ZERO, U_rows, U_cols, U_nnz, U_cooRows, U_cooCols, U_cooVals));
+    util::CHECK_MKL_ERROR(mkl_sparse_convert_csr(cooU, SPARSE_OPERATION_NON_TRANSPOSE, &csrU));
+    
+    matrix_descr descr_U;
+    descr_U.type = SPARSE_MATRIX_TYPE_TRIANGULAR;
+    descr_U.mode = SPARSE_FILL_MODE_UPPER;
+    descr_U.diag = SPARSE_DIAG_NON_UNIT;  // or SPARSE_DIAG_UNIT if unit diagonal
+    
+    // TODO...
+
+    // Clean up
+    util::CHECK_MKL_ERROR(mkl_sparse_destroy(cooL));
+    util::CHECK_MKL_ERROR(mkl_sparse_destroy(csrL));
+    util::CHECK_MKL_ERROR(mkl_sparse_destroy(cooU));
+    util::CHECK_MKL_ERROR(mkl_sparse_destroy(csrU));
+}

@@ -245,6 +245,7 @@ dSparse_PartialRRLDU_GPU_l3(COOMatrix_l2<double> const M_, double const cutoff,
         // Whether return all things or not
         if (isFullReturn) {
             // Memory allocation (full return -> return L, U, D)
+            /*
             resultSet.sparse_L.reconst(Nr, output_rank);
             resultSet.sparse_U.reconst(output_rank, Nc);
 
@@ -264,6 +265,29 @@ dSparse_PartialRRLDU_GPU_l3(COOMatrix_l2<double> const M_, double const cutoff,
                 if ((ri < resultSet.output_rank) && (ri < ci)) 
                     resultSet.sparse_U.add_element(ri, ci, val / resultSet.d[ri]);
             }
+            */
+
+            // Memory re-allocation (full return -> return cross part of L, U)
+            resultSet.sparse_L.reconst(output_rank, output_rank);
+            resultSet.sparse_U.reconst(output_rank, output_rank);
+            
+            // Diagonal entries
+            for (long long i = 0; i < output_rank; ++i)
+                resultSet.sparse_L.add_element(i, i, resultSet.d[i]);
+            for (long long i = 0; i < output_rank; ++i)
+                resultSet.sparse_U.add_element(i, i, 1.0);
+            
+            // Guassian elimination (New version)
+            for (long long i = 0; i < M.nnz_count; ++i) {
+                long long ri = M.row_indices[i];
+                long long ci = M.col_indices[i];
+                double val = M.values[i];
+                if ((ci < resultSet.output_rank) && (ri < resultSet.output_rank) && (ci < ri)) 
+                    resultSet.sparse_L.add_element(ri, ci, val);
+                if ((ri < resultSet.output_rank) && (ci < resultSet.output_rank) && (ri < ci)) 
+                    resultSet.sparse_U.add_element(ri, ci, val / resultSet.d[ri]);
+            }
+
         } else {
             // Memory allocation (no full return -> return U11, B)
             resultSet.sparse_U11.reconst(output_rank, output_rank);
@@ -296,7 +320,7 @@ dSparse_PartialRRLDU_GPU_l3(COOMatrix_l2<double> const M_, double const cutoff,
 
 decompRes::SparseInterpRes<double>
 dSparse_Interpolative_GPU_l3(COOMatrix_l2<double> const M, double const cutoff, 
-                        double const spthres, long long const maxdim)
+                        double const spthres, long long const maxdim, bool const isCrossReturn)
 {   
     std::cout << "Sparse interpolative decomposition l3 (double GPU) starts.\n";
     util::Timer timer("Sparse Interp Decomp (GPU)");
@@ -306,7 +330,7 @@ dSparse_Interpolative_GPU_l3(COOMatrix_l2<double> const M, double const cutoff,
 
     // Partial rank-revealing LDU: cutoff / spthres / maxdim are controlled by input arguments of interpolative function
     // isFullReturn for prrldu function is set to FALSE by default so far
-    bool isFullReturn_prrldu = false;      
+    bool isFullReturn_prrldu = isCrossReturn;      
     auto prrlduResult = dSparse_PartialRRLDU_GPU_l3(M, cutoff, spthres, maxdim, isFullReturn_prrldu);
 
     // Rank detection
@@ -329,29 +353,33 @@ dSparse_Interpolative_GPU_l3(COOMatrix_l2<double> const M, double const cutoff,
         idResult.sparse_interp_coeff.reconst(output_rank, Nc - output_rank);
     }
             
-    // Interpolation coefficients
+    // Interpolation coefficients or CROSS inverse
     if (prrlduResult.isSparseRes) {        
-        // Sparse U -> Sparse interpolation
-        util::Timer timer("Interp-coeff Comp (Sparse)");
-        if (Nc != output_rank + 1)
-            mkl_trsv_idkernel(idResult.sparse_interp_coeff, prrlduResult, output_rank, Nc);    // CPU MKL kernel
-        
-        // slow!
-        ////cusparse_trsv_idkernel_3(idResult, prrlduResult, output_rank, Nc); // GPU CUSPARSE kernel
+        if (!isCrossReturn) {
+            util::Timer timer("ID Interp-coeff (Sparse)");            
+            if (Nc != output_rank + 1)
+                mkl_trsv_idkernel(idResult.sparse_interp_coeff, prrlduResult, output_rank, Nc);   // CPU MKL kernel
+                //cusparse_trsv_idkernel_3(idResult, prrlduResult, output_rank, Nc);                // GPU CUSPARSE kernel
+        } else {
+            util::Timer timer("CROSS Inverse (Sparse)");
+            std::cout << "CROSS Inverse kernel has not been finalized!" << std::endl;
+            //if (Nc ! = output_rank + 1)
+                // todo?
+        }   
     }
     else {
         // Dense U -> Dense interpolation
         util::Timer timer("Interp-coeff Comp (Dense)");
-        //double* U11 = new double[output_rank * output_rank]{0.0};
-        //double* b = new double[output_rank]{0.0};
-        //util::PrintMatWindow(prrlduResult.dense_U, output_rank, Nc, {0, output_rank-1}, {0, Nc-1});
+        double* U11 = new double[output_rank * output_rank]{0.0};
+        double* b = new double[output_rank]{0.0};
+        util::PrintMatWindow(prrlduResult.dense_U, output_rank, Nc, {0, output_rank-1}, {0, Nc-1});
 
         // Dense triangular solver
-        //denseTRSV_interp(prrlduResult, U11, b, Nc, output_rank, idResult);
+        denseTRSV_interp(prrlduResult, U11, b, Nc, output_rank, idResult);
 
         // Memory release
-        //delete[] b;
-        //delete[] U11;
+        delete[] b;
+        delete[] U11;
     }   
 
     // Memory release

@@ -307,7 +307,7 @@ dSparse_PartialRRLDU_CPU_l3(COOMatrix_l2<double> const M_, double const cutoff,
 
 decompRes::SparseInterpRes<double>
 dSparse_Interpolative_CPU_l3(COOMatrix_l2<double> const M, double const cutoff, 
-                        double const spthres, long long const maxdim)
+                        double const spthres, long long const maxdim, bool const isCrossReturn)
 {   
     std::cout << "Sparse interpolative decomposition l3 (double CPU) starts.\n";
     util::Timer timer("Sparse Interp Decomp (CPU)");
@@ -375,26 +375,10 @@ dSparse_Interpolative_CPU_l3(COOMatrix_l2<double> const M, double const cutoff,
 COOMatrix_l2<double> dcoeffZReconCPU(COOMatrix_l2<double> sparse_coeff_mat, std::unordered_map<long long, long long> cps, long long rank, long long col)
 {
     COOMatrix_l2<double> Z(rank, col);
-    
-    // Identity part
-    //for (long long i = 0; i < rank; ++i) {
-    //    Z.add_element(i, pivot_col[i], 1.0);
-    //}
-    
+       
     for (long long i = 0; i < rank; ++i) {
         Z.add_element(i, cps[i], 1.0);
     }
-
-    // Coefficient part
-    //for (long long i = rank; i < col; ++i) {   
-    //    for (long long r = 0; r < rank; ++r) {
-    //        double ele = coeffMatrix[r * (col - rank) + (i - rank)];
-    //        if (std::abs(ele) > 1e-14) {
-    //            Z.add_element(r, pivot_col[i], ele);
-    //        }
-    //    }
-    //}
-
 
     long long coeff_nnz = sparse_coeff_mat.nnz_count;
     for (long long nz = 0; nz < coeff_nnz; ++nz) {
@@ -408,8 +392,7 @@ COOMatrix_l2<double> dcoeffZReconCPU(COOMatrix_l2<double> sparse_coeff_mat, std:
             Z.add_element(coeff_mat_ridx, cps[i], coeff_mat_val);
         } else {
             Z.add_element(coeff_mat_ridx, i, coeff_mat_val); 
-        }
-        
+        }        
     }
 
     return Z;

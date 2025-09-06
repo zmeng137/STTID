@@ -47,9 +47,9 @@ TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff, size_t cons
 
         // Sparse interpolative decomposition
         #ifdef ENABLE_GPU
-        auto idResult = dSparse_Interpolative_GPU_l3(W, cutoff, spthres, r_max);
+        auto idResult = dSparse_Interpolative_GPU_l3(W, cutoff, spthres, r_max, cross_flag);
         #else
-        auto idResult = dSparse_Interpolative_CPU_l3(W, cutoff, spthres, r_max);
+        auto idResult = dSparse_Interpolative_CPU_l3(W, cutoff, spthres, r_max, cross_flag);
         #endif
 
         // There is no cutoff selection. Rank is revealed automatically by IDQR
@@ -57,7 +57,7 @@ TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff, size_t cons
 
         auto Z = dcoeffZReconCPU(idResult.sparse_interp_coeff, idResult.cps, ri, col);
 
-        // CROSS format NNZs
+       // Print the low rank approximation error and sparse information
         if (cross_flag) {
             auto row_subset = W.subrow(idResult.pivot_rows, ri);
             if (i == dim - 1)
@@ -66,7 +66,7 @@ TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff, size_t cons
         } else {
             if (i == dim - 1)
                 outFile << "ID (one-side ID) Format TT-factor (i.e. Interpolation)" << std::endl;
-            outFile << "Mode " << i << " NNZs: " << "NaN! Did not compute the interpolation matrix" << std::endl; //<< Z.nnz_count << std::endl;
+            outFile << "Mode " << i << " NNZs: " << Z.nnz_count << std::endl;
         }
 
         // Form a new tensor-train factor
