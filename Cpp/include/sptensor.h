@@ -790,9 +790,10 @@ auto SparseTTtoTensor(const Tensors&... tensors) {
 
 // TT Result struct
 struct SparseTTRes {
-    COOTensor<double, 2> StartG;
-    COOTensor<double, 2> EndG;
-    std::vector<COOTensor<double, 3>> InterG;
+    COOTensor<double, 2> StartG;  // Left-boundary TT-core (matrix)
+    COOTensor<double, 2> EndG;    // Right-boundary TT-core (matrix)
+    std::vector<COOTensor<double, 3>> InterG;  // Intermediate TT-cores (real cores if one-side ID format is used; fake cores if cross format is used)
+    std::vector<COOTensor<double, 2>> InterC;  // Intermediate cross matrices (only for cross format)
 };
 
 // Declare the template function of TT-ID
