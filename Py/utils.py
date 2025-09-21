@@ -23,19 +23,44 @@ def MatrixSparseStat(matrix: np.array):
     return
 
 # Show sparsity information of the input full (dense-format) tensor array 
-def TensorSparseStat(factors: list[np.array]):
+def TensorSparseStat(factors: list[np.array], hard_thres = 1e-14):
+    # Total number of nonzeros 
     totalnnz = 0
+    totalnnz_hthres = 0
+    
+    # Number of nonzeros of TT-cores
+    totalcore_nnz = 0
+    totalcore_nnz_hthres = 0
+    totalcore_size = 0
+
+    # Count nonzeros of TT-cores 
     for i in range(len(factors)):
         factor = factors[i]
         size = factor.size
         shape = factor.shape
-        cntzero = np.count_nonzero(np.abs(factor) < 1e-10)
+
+        cntzero = np.count_nonzero(factor == 0)
+        cntzero_hthres = np.count_nonzero(np.abs(factor) < hard_thres)
         cntnzero = size - cntzero
+        cntnzero_hthres = size - cntzero_hthres
+
+        if len(shape) == 3:
+            totalcore_size += size
+            totalcore_nnz += cntnzero
+            totalcore_nnz_hthres += cntnzero_hthres
+        
         totalnnz += cntnzero
+        totalnnz_hthres += cntnzero_hthres
         sparsity = cntzero / size
+        sparsity_hthres = cntzero_hthres / size
         density = cntnzero / size
-        print(f"Tensor {i}: shape = {shape}, size = {size}, # zero = {cntzero}, sparsity = {sparsity}, # non-zero = {cntnzero}, density = {density}")
-    print(f"Total number of non-zero: {totalnnz}\n\n")
+        density_hthres = cntnzero_hthres / size 
+        
+        print(f"Tensor {i}: shape = {shape}, size = {size}, # zero = {cntzero}, sparsity = {sparsity}, # non-zero = {cntnzero}, density = {density}..")
+        print(f"..If applying hard threshold {hard_thres}, # zero = {cntzero_hthres}, sparsity = {sparsity_hthres}, # non-zero = {cntnzero_hthres}, density = {density_hthres}")
+    
+    print(f"Total number of non-zero (hard threshold {hard_thres}): {totalnnz} ({totalnnz_hthres}). Avg density of TT-cores without pivot matrices: {totalcore_nnz/totalcore_size} ({totalcore_nnz_hthres/totalcore_size})\n") 
+
     return
 
 # Find Pct%-close-to-0 values of a martrix and cast them to 0
