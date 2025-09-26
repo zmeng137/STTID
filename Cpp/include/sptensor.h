@@ -477,26 +477,33 @@ public:
     }
 
     // Write data to file
-    void write_to_file(const std::string& filename) const {
+    void write_to_file(const std::string& filename, int outidx_offset = 0) const {
         std::ofstream outfile(filename);
         if (!outfile.is_open()) {
             throw std::runtime_error("Could not open file for writing: " + filename);
         }
 
-        // Write first line: dimensions and data type
-        outfile << "Order: ";
+        // Write the first line: order and mode size
+        outfile << Order;
         for (size_t i = 0; i < Order; ++i) {
-            outfile << dimensions[i];
-            if (i < Order - 1) outfile << " ";
+            outfile << " " << dimensions[i];
         }
-        outfile << ", NNZ: " << nnz_count;
-        outfile << ", Datatype: " << typeid(T).name() << "\n";
+        outfile << "\n";
+
+        // Write the first line: dimensions and data type
+        //outfile << "Order: ";
+        //for (size_t i = 0; i < Order; ++i) {
+        //    outfile << dimensions[i];
+        //    if (i < Order - 1) outfile << " ";
+        //}
+        //outfile << ", NNZ: " << nnz_count;
+        //outfile << ", Datatype: " << typeid(T).name() << "\n";
 
         // Write each non-zero element
         for (size_t i = 0; i < nnz_count; ++i) {
             // Write indices
             for (size_t dim = 0; dim < Order; ++dim) {
-                outfile << indices[dim][i];
+                outfile << indices[dim][i] + outidx_offset;
                 if (dim < Order - 1) outfile << " ";
             }
             // Write value
@@ -793,7 +800,7 @@ struct SparseTTRes {
     COOTensor<double, 2> StartG;  // Left-boundary TT-core (matrix)
     COOTensor<double, 2> EndG;    // Right-boundary TT-core (matrix)
     std::vector<COOTensor<double, 3>> InterG;  // Intermediate TT-cores (real cores if one-side ID format is used; fake cores if cross format is used)
-    std::vector<COOTensor<double, 2>> InterC;  // Intermediate cross matrices (only for cross format)
+    std::vector<COOTensor<double, 2>> InterC;  // Intermediate cross pivot matrices (only for TCI format)
 };
 
 // Declare the template function of TT-ID
