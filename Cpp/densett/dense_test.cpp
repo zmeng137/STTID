@@ -141,39 +141,54 @@ void toy_test()
 
 int main(int argc, char** argv) 
 {
-    //{util::Timer timer("main process");
-    //SparseSyntheticT_DenseTest({100, 100, 100, 100}, {40, 200, 50}, {1E-2, 5E-3, 6E-3, 1E-2}, TTID_PRRLDU);}
-    //util::Timer::summarize();
-    
-    // Memory logger
-    //util::HostMemoryLogger host_mem_logger("gpu_main_memory_usage.csv", 1000);
-    //util::DeviceMemoryLogger device_mem_logger("gpu_device_memory_usage.csv", 1000, 0);
-    
-    {util::Timer timer("Main process");
+    if (argc != 11) {
+        std::cerr << "Error: Expected 10 arguments, got " << (argc - 1) << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <data_file_path> <nnz> <order1> <order2> <order3> <order4> <rmax> <epsilon> <binary> <idx_offset>" << std::endl;
+        return 1;
+    } 
+
     //------------ GLOBAL PARAMETERS ------------//
     // Input tensor settings
-    const std::string filepath = "/home/zmeng5/TensorData/7.tns";
-    //const std::string filepath = "/home/mengzn/Desktop/TensorData/20.tns";
+    std::string filepath = argv[1];
     const size_t Order = 4;    
-    const size_t num_entries = 156492; 
-    const std::array<size_t, Order> dimensions = {100, 100, 100, 100};
-    
+    size_t num_entries = std::stoll(argv[2]); 
+    std::array<size_t, Order> dimensions;
+
     // Tensor-train algorithm settings
-    int r_max = 1000;
-    double eps = 1e-8;
-    //-------------------------------------------//
+    size_t r_max = std::stoll(argv[7]);
+    double eps = std::stod(argv[8]);
+    bool binary = std::stoi(argv[9]);
+    size_t idx_offset = std::stoll(argv[10]);
     
+    // Flags
+    bool check_flag = false;   
+    bool cross_flag = true;
+    bool ifEval = true;
+
+    // Print loading info
+    std::cout << "Tensor file: " << filepath << "\n" << "Nonzero count: " << num_entries << "\n";
+    std::cout << "r_max: " << r_max << "\n" << "tolerance: " << eps << "\n" << "spthres: NULL" << std::endl;
+    //-------------------------------------------//
+
     // Create arrays to store the data
     std::array<size_t*, Order> indices;
     double* values = new double[num_entries];
     bool data_lf;
-    // Read the data
-    {
-        util::Timer timer("Data load");
-        data_lf = util::read_sparse_tensor<Order>(filepath, indices, values, num_entries);
+    
+    {util::Timer timer("Data load");  // Read the data
+    data_lf = util::read_sparse_tensor<Order>(filepath, indices, dimensions, values, num_entries, binary, idx_offset);}
+
+    // Adaptive dimensions
+    std::cout << "Dimension of the input tensor: ";
+    for (size_t i = 0; i < dimensions.size(); ++i) {
+        size_t temp = std::stoll(argv[3 + i]);
+        dimensions[i] = std::max(dimensions[i], temp);
+        std::cout << dimensions[i] << ", ";
     }
+    std::cout << "\n";
+
+    // Print the input data
     if (data_lf) {
-        // Print the input data
         std::cout << "The input tensor in COO format is as follows:\n";
         for (int i = 0; i < Order; ++i) {
             std::cout << "index " << i << ": "; 
@@ -195,14 +210,26 @@ int main(int argc, char** argv)
         Tensor.nnz_count = num_entries;
         Tensor.indices = indices;
         Tensor.values = values;
-
+        
         auto dTensor  = Tensor.to_dense();
 
         // Sparse TTID algorithm
         std::cout << "TT-ID-PRRLDU starts\n";
         auto ttList = TT_IDPRRLDU_dense(dTensor, r_max, eps);        
+        
+        // Output information display
+        if (ifEval) {
+            util::Timer timer("Result evaluation");
+            tblis::tensor<double> result_with_trivial;
+            auto recTensor = denseT::TT_Contraction_dense(ttList);
+            //double error = denseT::NormError(dTensor, recTensor, 2, true);
+            //std::cout << "TT recon error: " << error << "\n";
+            //std::cout << "Test ends." << std::endl;
+        }
+        
+        // Timer summary
+        util::Timer::summarize();
     }
-    
-    }util::Timer::summarize();
-    return 0; 
+    return 0;
 }
+
