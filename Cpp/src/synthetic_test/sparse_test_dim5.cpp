@@ -33,9 +33,10 @@ int main(int argc, char* argv[])
     size_t idx_offset = std::stoll(argv[12]);
     
     // Flags
-    bool check_flag = false;
-    bool cross_flag = false;  
-    bool ifEval = false;  
+    bool check_flag = false;   
+    bool cross_flag = true;
+    bool output_flag = false;
+    bool eval_flag = false;
 
     // Print loading info
     std::cout << "Tensor file: " << filepath << "\n" << "Nonzero count: " << num_entries << "\n";
@@ -93,30 +94,43 @@ int main(int argc, char* argv[])
         auto ttList = TT_ID_sparse(Tensor, eps, r_max, spthres, check_flag, cross_flag);
         std::cout << "SPARSE TT-ID ENDS:\n";
 
-        // Output information display
-        if (ifEval) {
-            if (!cross_flag) {
-                // Sparse information
-                std::cout << "OUTPUT INFO:\n"; 
-                std::cout << "Output core G1 --" << ttList.StartG << "\n";
-                std::cout << "Output core G2 --" << ttList.InterG[0] << "\n";
-                std::cout << "Output core G3 --" << ttList.InterG[1] << "\n";
-                std::cout << "Output core G4 --" << ttList.InterG[2] << "\n";
-                std::cout << "Output core G5 --" << ttList.EndG << "\n";
-                util::Timer timer("Result evaluation");
-                
-                std::filesystem::path execPath = argv[0];
-                std::filesystem::path execDir = execPath.parent_path();  // Get the directory containing the executable
-                ttList.StartG.write_to_file(execDir / "TTcore_no0.tns");
-                ttList.InterG[0].write_to_file(execDir / "TTcore_no1.tns");
-                ttList.InterG[1].write_to_file(execDir / "TTcore_no2.tns");
-                ttList.InterG[2].write_to_file(execDir / "TTcore_no3.tns");
-                ttList.EndG.write_to_file(execDir / "TTcore_no4.tns");
+        // Output TCI TT-core information
+        if (output_flag) {
+            util::Timer timer("Output TT");
+            std::filesystem::path execPath = argv[0];
+            std::filesystem::path execDir = execPath.parent_path();  // Get the directory containing the executable
+            std::cout << "OUTPUT INFO (TT-cores):\n"; 
+            std::cout << "Output core G1 --" << ttList.StartG << "\n";
+            std::cout << "Output core G2 --" << ttList.InterG[0] << "\n";
+            std::cout << "Output core G3 --" << ttList.InterG[1] << "\n"; 
+            std::cout << "Output core G4 --" << ttList.InterG[2] << "\n"; 
+            std::cout << "Output core G5 --" << ttList.EndG << "\n";
+            ttList.StartG.write_to_file(execDir / "TTcore_1.tns");
+            ttList.InterG[0].write_to_file(execDir / "TTcore_2.tns");
+            ttList.InterG[1].write_to_file(execDir / "TTcore_3.tns");
+            ttList.InterG[2].write_to_file(execDir / "TTcore_4.tns");
+            ttList.EndG.write_to_file(execDir / "TTcore_5.tns");
+            if (cross_flag) {
+                std::cout << "OUTPUT INFO (pivot matrices of TCI format):\n"; 
+                std::cout << "Output pivot mat X1 --" << ttList.InterC[0] << "\n";
+                std::cout << "Output pivot mat X2 --" << ttList.InterC[1] << "\n";
+                std::cout << "Output pivot mat X3 --" << ttList.InterC[2] << "\n";
+                std::cout << "Output pivot mat X4 --" << ttList.InterC[3] << "\n";
+                ttList.InterC[0].write_to_file(execDir / "pmat_1.tns");
+                ttList.InterC[1].write_to_file(execDir / "pmat_2.tns");
+                ttList.InterC[2].write_to_file(execDir / "pmat_3.tns");
+                ttList.InterC[3].write_to_file(execDir / "pmat_4.tns");
+            } 
+        }
 
-                //auto reconT = SparseTTtoTensor<double>(ttList.StartG, ttList.InterG[0], ttList.InterG[1], ttList.EndG);
-                //std::cout << "Reconstructed tensor -- " << reconT << "\n";
-                //double err = Tensor.rel_diff(reconT);
-                //std::cout << "Relative reconstruction error = " << err << std::endl; 
+        // Output information display
+        if (eval_flag) {
+            util::Timer timer("Result evaluation");
+            if (!cross_flag) {
+                auto reconT = SparseTTtoTensor<double>(ttList.StartG, ttList.InterG[0], ttList.InterG[1], ttList.InterG[2], ttList.EndG);
+                std::cout << "Reconstructed tensor -- " << reconT << "\n";
+                double err = Tensor.rel_diff(reconT);
+                std::cout << "Relative reconstruction error = " << err << std::endl;
             } else {
                 std::cout << "The CROSS-format evaluation has not been finalized." << std::endl;
             }
