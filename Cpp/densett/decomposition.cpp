@@ -145,7 +145,7 @@ dPartialRRLDU(double* M_, size_t Nr, size_t Nc,
         // Max value of Mabs
         double* pMabs_max = std::max_element(Mabs, Mabs + subN);
         double Mabs_max = *pMabs_max;
-        if (Mabs_max < cutoff) {
+        if (Mabs_max < cutoff || s > (maxdim + 1)) {
             inf_error = Mabs_max;
             delete[] Mabs;
             break;
