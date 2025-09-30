@@ -2,7 +2,10 @@
 #ifndef SPTENSOR_H
 #define SPTENSOR_H
 
+#ifdef DENSE_CONVERSION
 #include <tblis/tblis.h>
+#endif
+
 #include "structures.h"
 #include "util.h"
 
@@ -350,6 +353,7 @@ public:
         }
     }
 
+    #ifdef DENSE_CONVERSION
     tblis::tensor<T> to_dense() const {
         size_t N = 1;
         for (size_t i = 0; i < Order; ++i) {
@@ -372,6 +376,7 @@ public:
         }
         return fullT;
     }
+    #endif
 
     // Reshape the tensor into a 2d matrix
     COOMatrix_l2<T> reshape2Matl2(size_t mat_row, size_t mat_col) const {
