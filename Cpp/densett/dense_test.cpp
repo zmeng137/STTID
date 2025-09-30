@@ -162,8 +162,8 @@ int main(int argc, char** argv)
     
     // Flags
     bool check_flag = false;   
-    bool cross_flag = true;
-    bool ifEval = true;
+    //bool cross_flag = true;
+    bool ifEval = false;
 
     // Print loading info
     std::cout << "Tensor file: " << filepath << "\n" << "Nonzero count: " << num_entries << "\n";
