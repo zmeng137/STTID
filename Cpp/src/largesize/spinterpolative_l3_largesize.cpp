@@ -344,8 +344,8 @@ dSparse_Interpolative_CPU_l3(COOMatrix_l2<double> const M, double const cutoff,
     if (prrlduResult.isSparseRes) {        
         // Sparse U -> Sparse interpolation
         util::Timer timer("Interp-coeff Comp (Sparse)");
-        if (Nc != output_rank + 1)
-            mkl_trsv_idkernel(idResult.sparse_interp_coeff, prrlduResult, output_rank, Nc);   
+        //if (Nc != output_rank + 1)
+        //    mkl_trsv_idkernel(idResult.sparse_interp_coeff, prrlduResult, output_rank, Nc);   
     }
     else {
         // Dense U -> Dense interpolation

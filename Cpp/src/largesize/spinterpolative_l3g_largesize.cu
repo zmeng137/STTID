@@ -357,7 +357,7 @@ dSparse_Interpolative_GPU_l3(COOMatrix_l2<double> const M, double const cutoff,
     if (prrlduResult.isSparseRes) {        
         if (!isCrossReturn) {
             util::Timer timer("ID Interp-coeff (Sparse)");            
-            if (Nc != output_rank + 1)
+            if (prrlduResult.sparse_B.nnz_count != 0 )   // PROBLEM HERE! May use sparse_b as justification
                 mkl_trsv_idkernel(idResult.sparse_interp_coeff, prrlduResult, output_rank, Nc);   // CPU MKL kernel
                 //cusparse_trsv_idkernel_3(idResult, prrlduResult, output_rank, Nc);                // GPU CUSPARSE kernel
         } else {
