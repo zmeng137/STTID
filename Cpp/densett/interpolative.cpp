@@ -70,6 +70,8 @@ void dInterpolative_PrrLDU(double* M, size_t Nr, size_t Nc, size_t maxdim, doubl
     // Compute inverse of U11 through backward-substitution solving
     double* iU11 = new double[k * k]{0.0};
     double* b = new double[k]{0.0};
+    
+    /*
     for (size_t i = 0; i < k; ++i) {
         util::Timer timer("trsv");
         // Right hand side b (one column of the diagonal matrix)
@@ -83,6 +85,7 @@ void dInterpolative_PrrLDU(double* M, size_t Nr, size_t Nc, size_t maxdim, doubl
         for (size_t j = 0; j < k; ++j) 
             iU11[j * k + i] = b[j];
     }
+    */
 
     // Compute the interpolation matrix
     double* ZjJ = new double[k * Nc]{0.0};
