@@ -72,6 +72,8 @@ set (SHARED_SOURCES_SPTT
 set (SHARED_SOURCES_SPTT_LS
     src/sparsett/decomp_kernel.cu
     src/sparsett/dense_decomp_kernel.cu
+    src/largesize/spinterpolative_l1_largesize.cpp
+    src/largesize/spinterpolative_l2_largesize.cpp
     src/largesize/spinterpolative_l3_largesize.cpp
     src/largesize/spinterpolative_l3g_largesize.cu
     src/largesize/sptensortrain_largesize.cpp
