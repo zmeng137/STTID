@@ -7,7 +7,7 @@
 #include "gpu_kernel.h"
 
 //#define KFUSION   // optimized runtime
-//#define nnz_log   // output fill-ins to a file
+#define nnz_log   // output fill-ins to a file
 
 void denseLU_gpukernel(double* M_full, const long long Nr, const long long Nc, 
     long long& s, const long long k, const double cutoff, double& inf_error, 
