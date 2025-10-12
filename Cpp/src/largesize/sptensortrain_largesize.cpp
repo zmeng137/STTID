@@ -51,7 +51,8 @@ TT_ID_sparse(const COOTensor<T, Order>& tensor, double const cutoff, size_t cons
         #ifdef ENABLE_GPU
         auto idResult = dSparse_Interpolative_GPU_l3(W, cutoff, spthres, r_max, cross_flag);
         #else
-        auto idResult = dSparse_Interpolative_CPU_l3(W, cutoff, spthres, r_max, cross_flag);
+        //auto idResult = dSparse_Interpolative_CPU_l3(W, cutoff, spthres, r_max, cross_flag);
+        auto idResult = dSparse_Interpolative_CPU_l1(W, cutoff, spthres, r_max);
         #endif
 
         // There is no cutoff selection. Rank is revealed automatically by ID-PRRLU
