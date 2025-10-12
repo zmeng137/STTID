@@ -39,17 +39,21 @@ add_library(shared_lib_denseTT STATIC ${SHARED_SOURCES_DENSETT})
 target_link_libraries(shared_lib_denseTT PUBLIC ${TBLIS_LIB} ${BLAS_LIBRARIES} ${LAPACKE_LIB})
 
 # Define sources
-set(SOURCES_SYND dense_test.cpp)
-set(SOURCES_RECD dense_recon_4dim.cpp)
+set(SOURCES_SYND_4D dense_test_4d.cpp)
+set(SOURCES_SYND_5D dense_test_5d.cpp)
+set(SOURCES_RECD_4D dense_recon_4d.cpp)
 
 # Executables for synthetic tests
-add_executable(synthetic_dense_test ${SOURCES_SYND})
-add_executable(recon_dense_test ${SOURCES_RECD})
+add_executable(synthetic_dense_test_4d ${SOURCES_SYND_4D})
+add_executable(synthetic_dense_test_5d ${SOURCES_SYND_5D})
+add_executable(recon_dense_test_4d ${SOURCES_RECD_4D})
 
 # Link libraries for synthetic test exe
-target_link_libraries(synthetic_dense_test PRIVATE shared_lib_denseTT)
-target_link_libraries(recon_dense_test PRIVATE shared_lib_denseTT)
+target_link_libraries(synthetic_dense_test_4d PRIVATE shared_lib_denseTT)
+target_link_libraries(synthetic_dense_test_5d PRIVATE shared_lib_denseTT)
+target_link_libraries(recon_dense_test_4d PRIVATE shared_lib_denseTT)
 
 # Output executables to different directories
-set_target_properties(synthetic_dense_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/synthetic_test)
-set_target_properties(recon_dense_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/synthetic_test)
+set_target_properties(synthetic_dense_test_4d PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/synthetic_test)
+set_target_properties(synthetic_dense_test_5d PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/synthetic_test)
+set_target_properties(recon_dense_test_4d PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/synthetic_test)
