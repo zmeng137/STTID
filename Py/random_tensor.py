@@ -112,7 +112,7 @@ if __name__ == "__main__":
     # Generate a 2D sparse tensor
     alpha = 2       # Power law exponent
     shape = (100, 100, 100, 100)
-    density = 3.11e-5
+    density = 1.273e-4
     seed = 10
 
     print(f"Generating sparse tensor of shape {shape} with {density*100}% density")
@@ -142,6 +142,6 @@ if __name__ == "__main__":
     print(f"Number of dimensions: {sparse_tensor_1.dim()}")
     
     outputPath = "/home/zmeng5/STTID/Data/"
-    outputPath = outputPath + "rnd_pl_7.tns" 
+    outputPath = outputPath + "rnd_pl_8.tns" 
     write_to_tns_fast_numpy(sparse_tensor_1, outputPath)
     pass
