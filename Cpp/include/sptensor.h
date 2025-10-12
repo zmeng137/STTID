@@ -2,6 +2,7 @@
 #ifndef SPTENSOR_H
 #define SPTENSOR_H
 
+#define DENSE_CONVERSION
 #ifdef DENSE_CONVERSION
 #include <tblis/tblis.h>
 #endif
@@ -288,6 +289,14 @@ public:
     T* get_values() const {
         return values;
     }    
+
+    size_t get_size() const {
+        size_t N = 1;
+        for (size_t dim = 0; dim < Order; ++dim) {
+            N *= dimensions[dim];
+        }
+        return N;
+    }
 
     double get_density() const {
         size_t N = 1;
