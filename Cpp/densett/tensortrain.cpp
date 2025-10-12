@@ -155,10 +155,12 @@ std::vector<tblis::tensor<double>> TT_IDPRRLDU_dense(tblis::tensor<double> tenso
 
         int row = nbar / r / shape[i];       // Reshape row
         int col = r * shape[i];              // Reshape column
-        
+        long long Csize = (long long)row * r_max;
+        long long Zsize = (long long)r_max * col;
+
         // Initialize ID factors
-        double* C = new double[row * r_max];
-        double* Z = new double[r_max * col];
+        double* C = new double[Csize];
+        double* Z = new double[Zsize];
         size_t out_r;
         dInterpolative_PrrLDU(W.data(), row, col, r_max, delta, C, Z, out_r);
         
@@ -168,10 +170,10 @@ std::vector<tblis::tensor<double>> TT_IDPRRLDU_dense(tblis::tensor<double> tenso
         // Print the low rank approximation error
         if (verbose) {    
             double max_error = 0.0;
-            for (int i = 0; i < row; ++i) {
-                for (int j = 0; j < col; ++j) {
+            for (size_t i = 0; i < row; ++i) {
+                for (size_t j = 0; j < col; ++j) {
                     double temp = 0.0;
-                    for (int l = 0; l < out_r; ++l)
+                    for (size_t l = 0; l < out_r; ++l)
                         temp += C[i * out_r + l] * Z[l * col + j];                    
                     max_error = std::max(max_error, 
                     std::abs(temp - W.data()[i * col + j]));
