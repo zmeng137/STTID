@@ -116,6 +116,9 @@ int main(int argc, char* argv[])
                 ttList.InterC[0].write_to_file(execDir / "pmat_1.tns", 1);
                 ttList.InterC[1].write_to_file(execDir / "pmat_2.tns", 1);
                 ttList.InterC[2].write_to_file(execDir / "pmat_3.tns", 1);
+                size_t total_coresize = ttList.StartG.get_size() + ttList.EndG.get_size() + ttList.InterG[0].get_size() + ttList.InterG[1].get_size();
+                size_t total_corennz = ttList.StartG.nnz() + ttList.EndG.nnz() + ttList.InterG[0].nnz() + ttList.InterG[1].nnz();
+                std::cout << "Average core density of TT-cores Gk: " << double(total_corennz) / double(total_coresize) << std::endl;
             } 
         }
 

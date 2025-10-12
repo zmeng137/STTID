@@ -34,8 +34,8 @@ int main(int argc, char* argv[])
     
     // Flags
     bool check_flag = false;   
-    bool cross_flag = true;
-    bool output_flag = false;
+    bool cross_flag = false;
+    bool output_flag = true;
     bool eval_flag = false;
 
     // Print loading info
@@ -105,21 +105,24 @@ int main(int argc, char* argv[])
             std::cout << "Output core G3 --" << ttList.InterG[1] << "\n"; 
             std::cout << "Output core G4 --" << ttList.InterG[2] << "\n"; 
             std::cout << "Output core G5 --" << ttList.EndG << "\n";
-            ttList.StartG.write_to_file(execDir / "TTcore_1.tns");
-            ttList.InterG[0].write_to_file(execDir / "TTcore_2.tns");
-            ttList.InterG[1].write_to_file(execDir / "TTcore_3.tns");
-            ttList.InterG[2].write_to_file(execDir / "TTcore_4.tns");
-            ttList.EndG.write_to_file(execDir / "TTcore_5.tns");
+            ttList.StartG.write_to_file(execDir / "TTcore_1.tns", 1);
+            ttList.InterG[0].write_to_file(execDir / "TTcore_2.tns", 1);
+            ttList.InterG[1].write_to_file(execDir / "TTcore_3.tns", 1);
+            ttList.InterG[2].write_to_file(execDir / "TTcore_4.tns", 1);
+            ttList.EndG.write_to_file(execDir / "TTcore_5.tns", 1);
             if (cross_flag) {
                 std::cout << "OUTPUT INFO (pivot matrices of TCI format):\n"; 
                 std::cout << "Output pivot mat X1 --" << ttList.InterC[0] << "\n";
                 std::cout << "Output pivot mat X2 --" << ttList.InterC[1] << "\n";
                 std::cout << "Output pivot mat X3 --" << ttList.InterC[2] << "\n";
                 std::cout << "Output pivot mat X4 --" << ttList.InterC[3] << "\n";
-                ttList.InterC[0].write_to_file(execDir / "pmat_1.tns");
-                ttList.InterC[1].write_to_file(execDir / "pmat_2.tns");
-                ttList.InterC[2].write_to_file(execDir / "pmat_3.tns");
-                ttList.InterC[3].write_to_file(execDir / "pmat_4.tns");
+                ttList.InterC[0].write_to_file(execDir / "pmat_1.tns", 1);
+                ttList.InterC[1].write_to_file(execDir / "pmat_2.tns", 1);
+                ttList.InterC[2].write_to_file(execDir / "pmat_3.tns", 1);
+                ttList.InterC[3].write_to_file(execDir / "pmat_4.tns", 1);
+                size_t total_coresize = ttList.StartG.get_size() + ttList.EndG.get_size() + ttList.InterG[0].get_size() + ttList.InterG[1].get_size() + ttList.InterG[2].get_size();
+                size_t total_corennz = ttList.StartG.nnz() + ttList.EndG.nnz() + ttList.InterG[0].nnz() + ttList.InterG[1].nnz() + ttList.InterG[2].nnz();
+                std::cout << "Average core density of TT-cores Gk: " << double(total_corennz) / double(total_coresize) << std::endl;
             } 
         }
 
