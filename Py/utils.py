@@ -1,14 +1,6 @@
 import numpy as np
 import sparse as sp
 import time as tm
-import matplotlib.pyplot as plt
-
-# Visualization of 2D matrix 
-def view_mat2d(matrix):
-    plt.figure(figsize=(10,8))
-    plt.imshow(matrix, cmap='viridis', aspect='auto')
-    plt.tight_layout()
-    plt.show()
 
 # Show sparsity information of the input full (dense-format) matrix
 def MatrixSparseStat(matrix: np.array):
@@ -23,7 +15,7 @@ def MatrixSparseStat(matrix: np.array):
     return
 
 # Show sparsity information of the input full (dense-format) tensor array 
-def TensorSparseStat(factors: list[np.array], hard_thres = 1e-14):
+def TensorSparseStat(factors: list[np.array], hard_thres = 1e-14, verbose = False):
     # Total number of nonzeros 
     totalnnz = 0
     totalnnz_hthres = 0
@@ -56,8 +48,9 @@ def TensorSparseStat(factors: list[np.array], hard_thres = 1e-14):
         density = cntnzero / size
         density_hthres = cntnzero_hthres / size 
         
-        print(f"Tensor {i}: shape = {shape}, size = {size}, # zero = {cntzero}, sparsity = {sparsity}, # non-zero = {cntnzero}, density = {density}..")
-        print(f"..If applying hard threshold {hard_thres}, # zero = {cntzero_hthres}, sparsity = {sparsity_hthres}, # non-zero = {cntnzero_hthres}, density = {density_hthres}")
+        if verbose:
+            print(f"Tensor {i}: shape = {shape}, size = {size}, # zero = {cntzero}, sparsity = {sparsity}, # non-zero = {cntnzero}, density = {density}..")
+            print(f"..If applying hard threshold {hard_thres}, # zero = {cntzero_hthres}, sparsity = {sparsity_hthres}, # non-zero = {cntnzero_hthres}, density = {density_hthres}")
     
     print(f"\nTotal number of non-zero (hard threshold {hard_thres}): {totalnnz} ({totalnnz_hthres}).") 
     print(f"Average density of the output tensor train: {totalcore_nnz/totalcore_size} ({totalcore_nnz_hthres/totalcore_size})") 

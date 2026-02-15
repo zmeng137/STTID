@@ -83,11 +83,21 @@ def TTcrossQR_test():
         print(f"Failure in TT-cross-qr: {e}")
         return
     
-# What you need to input for testing
+# === What you need to input for testing === #
+
+# Filename of the input tensor (in .tns format)
 FILENAME = "Rnd1.tns"
+
+# Shape of the input tensor (must be consistent with the .tns file)
 SHAPE = [10, 10, 10, 10]
-rank_max = 50  # maximal TT-rank for all methods (except for TT-CROSS QR, which uses a different rank parameter)
-rank_list = [1, 10, 50, 10, 1]  # rank list for each TT-core (only for TT-CROSS-QR from tensorly, which requires a full rank list instead of a single max rank)
+
+# maximal TT-rank for all methods (except for TT-CROSS QR, which uses a different rank parameter)
+rank_max = 30  
+
+# rank list for each TT-core (only for TT-CROSS-QR from tensorly, which requires a full rank list instead of a single max rank)
+rank_list = [1, 10, 30, 10, 1]  
+
+# cutoff for all methods (can be set as machine precision for best accuracy achieved by the maixmum rank)
 cutoff = 1e-14
 
 # Data Loading
