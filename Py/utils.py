@@ -59,9 +59,10 @@ def TensorSparseStat(factors: list[np.array], hard_thres = 1e-14):
         print(f"Tensor {i}: shape = {shape}, size = {size}, # zero = {cntzero}, sparsity = {sparsity}, # non-zero = {cntnzero}, density = {density}..")
         print(f"..If applying hard threshold {hard_thres}, # zero = {cntzero_hthres}, sparsity = {sparsity_hthres}, # non-zero = {cntnzero_hthres}, density = {density_hthres}")
     
-    print(f"Total number of non-zero (hard threshold {hard_thres}): {totalnnz} ({totalnnz_hthres}). Avg density of TT-cores without pivot matrices: {totalcore_nnz/totalcore_size} ({totalcore_nnz_hthres/totalcore_size})\n") 
+    print(f"\nTotal number of non-zero (hard threshold {hard_thres}): {totalnnz} ({totalnnz_hthres}).") 
+    print(f"Average density of the output tensor train: {totalcore_nnz/totalcore_size} ({totalcore_nnz_hthres/totalcore_size})") 
 
-    return
+    return 
 
 # Find Pct%-close-to-0 values of a martrix and cast them to 0
 def CastValueAroundZero(Mat: np.array, Pct: float) -> np.array:
