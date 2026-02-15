@@ -592,7 +592,7 @@ def TCI_2site(tensor, eps, tt_rmax, interp_I, interp_J, cvg_check = 0):
             recon_t = tl.tt_to_tensor(TT_cores)
             rel_diff = tl.norm(recon_t - tensor) / tl.norm(tensor)
             delta_diff = np.abs(rel_diff - pre_error) / np.abs(pre_error)
-            print(f"Iteration {iter} - relative error: {rel_diff}, delta error: {delta_diff}, TTRank: {TTRank}")
+            #print(f"Iteration {iter} - relative error: {rel_diff}, delta error: {delta_diff}, TTRank: {TTRank}")
             pre_error = rel_diff
             if delta_diff < 1e-8:
                 break
