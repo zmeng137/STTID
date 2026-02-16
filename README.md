@@ -38,3 +38,5 @@ The executables handle STTID processing for order-4 and order-5 tensors respecti
 5. Approximation tolerance
 6. Sparse threshold value
    
+..
+mit license..
