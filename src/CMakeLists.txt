@@ -44,40 +44,40 @@ CPMAddPackage(
 
 # Shared library for MKL compute subroutines
 set(SHARED_SOURCES_MKLKERNEL 
-    src/mkl_kernel/dense_kernel.cpp
-    src/mkl_kernel/trsv_kernel.cpp
-    src/util/timer.cpp)
+    sttid/mkl_kernel/dense_kernel.cpp
+    sttid/mkl_kernel/trsv_kernel.cpp
+    sttid/util/timer.cpp)
 
 set(SHARED_SOURCES_MKLKERNEL_LS 
-    src/mkl_kernel/dense_kernel.cpp
-    src/largesize/trsv_kernel_largesize.cpp
-    src/util/timer.cpp)
+    sttid/mkl_kernel/dense_kernel.cpp
+    sttid/largesize/trsv_kernel_largesize.cpp
+    sttid/util/timer.cpp)
   
 set(SHARED_SOURCES_CUSPARSE
-    src/cusp_kernel/cusparse_kernel.cu
-    src/util/timer.cpp)
+    sttid/cusp_kernel/cusparse_kernel.cu
+    sttid/util/timer.cpp)
 
 # Shared library for sparse tensor-train network
 set (SHARED_SOURCES_SPTT
-    src/sparsett/spinterpolative_l1.cpp
-    src/sparsett/spinterpolative_l2.cpp
-    src/sparsett/spinterpolative_l3.cpp
-    src/sparsett/decomp_kernel.cu
-    src/sparsett/dense_decomp_kernel.cu
-    src/sparsett/spinterpolative_l3g.cu
-    src/sparsett/sptensortrain.cpp
-    src/util/timer.cpp
+    sttid/sparsett/spinterpolative_l1.cpp
+    sttid/sparsett/spinterpolative_l2.cpp
+    sttid/sparsett/spinterpolative_l3.cpp
+    sttid/sparsett/decomp_kernel.cu
+    sttid/sparsett/dense_decomp_kernel.cu
+    sttid/sparsett/spinterpolative_l3g.cu
+    sttid/sparsett/sptensortrain.cpp
+    sttid/util/timer.cpp
 )
 
 set (SHARED_SOURCES_SPTT_LS
-    src/sparsett/decomp_kernel.cu
-    src/sparsett/dense_decomp_kernel.cu
-    src/largesize/spinterpolative_l1_largesize.cpp
-    src/largesize/spinterpolative_l2_largesize.cpp
-    src/largesize/spinterpolative_l3_largesize.cpp
-    src/largesize/spinterpolative_l3g_largesize.cu
-    src/largesize/sptensortrain_largesize.cpp
-    src/util/timer.cpp
+    sttid/sparsett/decomp_kernel.cu
+    sttid/sparsett/dense_decomp_kernel.cu
+    sttid/largesize/spinterpolative_l1_largesize.cpp
+    sttid/largesize/spinterpolative_l2_largesize.cpp
+    sttid/largesize/spinterpolative_l3_largesize.cpp
+    sttid/largesize/spinterpolative_l3g_largesize.cu
+    sttid/largesize/sptensortrain_largesize.cpp
+    sttid/util/timer.cpp
 )
 
 # MKL compute kernel
@@ -105,8 +105,8 @@ target_link_libraries(shared_lib_sparseTT_ls PRIVATE CUDA::cudart CUDA::cublas c
 target_link_libraries(shared_lib_sparseTT_ls PRIVATE shared_mkl_kernel_ls)
 
 # Define sources
-set(SOURCES_SYNS4 src/synthetic_test/sparse_test_dim4.cpp)
-set(SOURCES_SYNS5 src/synthetic_test/sparse_test_dim5.cpp)
+set(SOURCES_SYNS4 sttid/synthetic_test/sparse_test_dim4.cpp)
+set(SOURCES_SYNS5 sttid/synthetic_test/sparse_test_dim5.cpp)
 
 # Executables for synthetic tests
 add_executable(synthetic_sparse_test_dim4 ${SOURCES_SYNS4})
@@ -119,7 +119,7 @@ target_link_libraries(synthetic_sparse_test_dim4 PRIVATE shared_lib_sparseTT CUD
 target_link_libraries(synthetic_sparse_test_dim5 PRIVATE shared_lib_sparseTT CUDA::cudart)
 target_link_libraries(synthetic_sparse_test_dim4_ls PRIVATE shared_lib_sparseTT_ls CUDA::cudart)
 target_link_libraries(synthetic_sparse_test_dim5_ls PRIVATE shared_lib_sparseTT_ls CUDA::cudart)
-set_target_properties(synthetic_sparse_test_dim4 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/synthetic_test)
-set_target_properties(synthetic_sparse_test_dim5 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/synthetic_test)
-set_target_properties(synthetic_sparse_test_dim4_ls PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/synthetic_test)
-set_target_properties(synthetic_sparse_test_dim5_ls PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/synthetic_test)
+set_target_properties(synthetic_sparse_test_dim4 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
+set_target_properties(synthetic_sparse_test_dim5 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
+set_target_properties(synthetic_sparse_test_dim4_ls PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
+set_target_properties(synthetic_sparse_test_dim5_ls PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
