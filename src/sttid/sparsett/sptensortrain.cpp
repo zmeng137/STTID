@@ -2,7 +2,7 @@
 #include "spfunctions.h"
 #include "util.h"
 
-#define ENABLE_GPU
+//#define ENABLE_GPU
 
 // Define the template function TT_ID_sparse
 template<typename T, size_t Order> SparseTTRes 

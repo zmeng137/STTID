@@ -1,19 +1,26 @@
 cmake_minimum_required(VERSION 3.23.1 FATAL_ERROR) # Minimum cmake version 
-project(SparseTensorTrain CUDA CXX)  # Project name
+project(DTTID CXX)  # Project name
+
+# Function to copy executable to a second location after build
+function(add_executable_dual_output target_name source_files)
+    add_executable(${target_name} ${source_files})
+    
+    # Primary output directory: STTID/src/build/exe/
+    set_target_properties(${target_name} PROPERTIES 
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/exe)
+    
+    # Copy to secondary location after build: STTID/exe/
+    add_custom_command(TARGET ${target_name} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy 
+            $<TARGET_FILE:${target_name}> 
+            ${CMAKE_SOURCE_DIR}/../../exe/$<TARGET_FILE_NAME:${target_name}>)
+endfunction()
 
 # Enable C++17
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 message(STATUS "G++ version: ${GXX_VERSION}")
-
-# Set default build type
-set(CMAKE_BUILD_TYPE Debug)
-
-# Set CUDA architecture
-set(CMAKE_CUDA_ARCHITECTURES "75;86;89")
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
+set(CMAKE_BUILD_TYPE Release)
 
 # Include directory for headers
 include_directories(../include)
@@ -44,16 +51,11 @@ set(SOURCES_SYND_5D dense_test_5d.cpp)
 set(SOURCES_RECD_4D dense_recon_4d.cpp)
 
 # Executables for synthetic tests
-add_executable(synthetic_dense_test_4d ${SOURCES_SYND_4D})
-add_executable(synthetic_dense_test_5d ${SOURCES_SYND_5D})
-add_executable(recon_dense_test_4d ${SOURCES_RECD_4D})
+add_executable_dual_output(ttid_dim4_cpu ${SOURCES_SYND_4D})
+add_executable_dual_output(ttid_dim5_cpu ${SOURCES_SYND_5D})
+add_executable_dual_output(recon_dense_test_4d ${SOURCES_RECD_4D})
 
 # Link libraries for synthetic test exe
-target_link_libraries(synthetic_dense_test_4d PRIVATE shared_lib_denseTT)
-target_link_libraries(synthetic_dense_test_5d PRIVATE shared_lib_denseTT)
+target_link_libraries(ttid_dim4_cpu PRIVATE shared_lib_denseTT)
+target_link_libraries(ttid_dim5_cpu PRIVATE shared_lib_denseTT)
 target_link_libraries(recon_dense_test_4d PRIVATE shared_lib_denseTT)
-
-# Output executables to different directories
-set_target_properties(synthetic_dense_test_4d PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/synthetic_test)
-set_target_properties(synthetic_dense_test_5d PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/synthetic_test)
-set_target_properties(recon_dense_test_4d PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/synthetic_test)

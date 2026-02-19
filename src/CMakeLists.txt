@@ -1,5 +1,20 @@
 cmake_minimum_required(VERSION 3.23.1 FATAL_ERROR) # Minimum cmake version 
-project(SparseTensorTrain CUDA CXX)  # Project name
+project(STTID CUDA CXX)  # Project name
+
+# Function to copy executable to a second location after build
+function(add_executable_dual_output target_name source_files)
+    add_executable(${target_name} ${source_files})
+    
+    # Primary output directory: STTID/src/build/exe/
+    set_target_properties(${target_name} PROPERTIES 
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/exe)
+    
+    # Copy to secondary location after build: STTID/exe/
+    add_custom_command(TARGET ${target_name} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy 
+            $<TARGET_FILE:${target_name}> 
+            ${CMAKE_SOURCE_DIR}/../exe/$<TARGET_FILE_NAME:${target_name}>)
+endfunction()
 
 # Enable C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -9,7 +24,7 @@ set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 message(STATUS "G++ version: ${GXX_VERSION}")
 
 # Set default build type
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
 
 # Set CUDA architecture
 set(CMAKE_CUDA_ARCHITECTURES "75;86;89")
@@ -58,18 +73,15 @@ set(SHARED_SOURCES_CUSPARSE
     sttid/util/timer.cpp)
 
 # Shared library for sparse tensor-train network
-set (SHARED_SOURCES_SPTT
-    sttid/sparsett/spinterpolative_l1.cpp
-    sttid/sparsett/spinterpolative_l2.cpp
-    sttid/sparsett/spinterpolative_l3.cpp
-    sttid/sparsett/decomp_kernel.cu
-    sttid/sparsett/dense_decomp_kernel.cu
-    sttid/sparsett/spinterpolative_l3g.cu
-    sttid/sparsett/sptensortrain.cpp
+set (SHARED_SOURCES_SPTT_LS_CPU
+    sttid/largesize/spinterpolative_l1_largesize.cpp
+    sttid/largesize/spinterpolative_l2_largesize.cpp
+    sttid/largesize/spinterpolative_l3_largesize.cpp
+    sttid/largesize/sptensortrain_largesize.cpp
     sttid/util/timer.cpp
 )
 
-set (SHARED_SOURCES_SPTT_LS
+set (SHARED_SOURCES_SPTT_LS_GPU
     sttid/sparsett/decomp_kernel.cu
     sttid/sparsett/dense_decomp_kernel.cu
     sttid/largesize/spinterpolative_l1_largesize.cpp
@@ -95,31 +107,28 @@ target_link_libraries(shared_cusparse_kernel PRIVATE CUDA::cudart CUDA::cusparse
 target_compile_definitions(shared_cusparse_kernel PRIVATE MKL_ILP64 _GLIBCXX_USE_CXX17_ABI=1)  # Define required compiler definitions
 target_link_libraries(shared_cusparse_kernel PRIVATE -Wl,--no-as-needed -lmkl_intel_ilp64 -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -lm -ldl)
 
-add_library(shared_lib_sparseTT STATIC ${SHARED_SOURCES_SPTT})
-add_library(shared_lib_sparseTT_ls STATIC ${SHARED_SOURCES_SPTT_LS})
-#target_compile_options(shared_lib_spcuTT PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler -fPIC> $<$<COMPILE_LANGUAGE:CUDA>:--use_fast_math>)
+# STTID lib
+add_library(shared_lib_sparseTT_ls_cpu STATIC ${SHARED_SOURCES_SPTT_LS_CPU})
+add_library(shared_lib_sparseTT_ls_gpu STATIC ${SHARED_SOURCES_SPTT_LS_GPU})
 
-target_link_libraries(shared_lib_sparseTT PRIVATE CUDA::cudart CUDA::cublas cuco shared_cusparse_kernel)
-target_link_libraries(shared_lib_sparseTT PRIVATE shared_mkl_kernel)
-target_link_libraries(shared_lib_sparseTT_ls PRIVATE CUDA::cudart CUDA::cublas cuco shared_cusparse_kernel)
-target_link_libraries(shared_lib_sparseTT_ls PRIVATE shared_mkl_kernel_ls)
+target_link_libraries(shared_lib_sparseTT_ls_cpu PRIVATE shared_mkl_kernel_ls)
+
+target_compile_definitions(shared_lib_sparseTT_ls_gpu PRIVATE ENABLE_GPU)
+target_link_libraries(shared_lib_sparseTT_ls_gpu PRIVATE CUDA::cudart CUDA::cublas cuco shared_cusparse_kernel)
+target_link_libraries(shared_lib_sparseTT_ls_gpu PRIVATE shared_mkl_kernel_ls)
 
 # Define sources
 set(SOURCES_SYNS4 sttid/synthetic_test/sparse_test_dim4.cpp)
 set(SOURCES_SYNS5 sttid/synthetic_test/sparse_test_dim5.cpp)
 
-# Executables for synthetic tests
-add_executable(synthetic_sparse_test_dim4 ${SOURCES_SYNS4})
-add_executable(synthetic_sparse_test_dim5 ${SOURCES_SYNS5})
-add_executable(synthetic_sparse_test_dim4_ls ${SOURCES_SYNS4})
-add_executable(synthetic_sparse_test_dim5_ls ${SOURCES_SYNS5})
+# Executables for executable tests
+add_executable_dual_output(sttid_dim4_cpu ${SOURCES_SYNS4})
+add_executable_dual_output(sttid_dim4_gpu ${SOURCES_SYNS4})
+add_executable_dual_output(sttid_dim5_cpu ${SOURCES_SYNS5})
+add_executable_dual_output(sttid_dim5_gpu ${SOURCES_SYNS5})
 
-# Link libraries for synthetic test exe
-target_link_libraries(synthetic_sparse_test_dim4 PRIVATE shared_lib_sparseTT CUDA::cudart)
-target_link_libraries(synthetic_sparse_test_dim5 PRIVATE shared_lib_sparseTT CUDA::cudart)
-target_link_libraries(synthetic_sparse_test_dim4_ls PRIVATE shared_lib_sparseTT_ls CUDA::cudart)
-target_link_libraries(synthetic_sparse_test_dim5_ls PRIVATE shared_lib_sparseTT_ls CUDA::cudart)
-set_target_properties(synthetic_sparse_test_dim4 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
-set_target_properties(synthetic_sparse_test_dim5 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
-set_target_properties(synthetic_sparse_test_dim4_ls PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
-set_target_properties(synthetic_sparse_test_dim5_ls PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
+# Link libraries for test exe
+target_link_libraries(sttid_dim4_cpu PRIVATE shared_lib_sparseTT_ls_cpu CUDA::cudart)
+target_link_libraries(sttid_dim4_gpu PRIVATE shared_lib_sparseTT_ls_gpu CUDA::cudart)
+target_link_libraries(sttid_dim5_cpu PRIVATE shared_lib_sparseTT_ls_cpu CUDA::cudart)
+target_link_libraries(sttid_dim5_gpu PRIVATE shared_lib_sparseTT_ls_gpu CUDA::cudart)
