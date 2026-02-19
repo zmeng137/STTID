@@ -27,7 +27,7 @@ Two implementations are included:
 - CMake 3.23.1 or above
 - [Intel MKL](https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html) 2020.0.0 (Sparse BLAS)
 - [CUDA 12.0](https://developer.nvidia.com/cuda-12-0-0-download-archive) (including cuSPARSE 12.1 and cuBLAS 12.0.2)
-- TBLIS 1.3.0 (if one wants to build the dense TT-ID implementation as well.)
+- [TBLIS 1.3.0](https://github.com/MatthewsResearchGroup/tblis.git) (if one wants to build the dense TT-ID implementation as well.)
 
 ## Data
 
