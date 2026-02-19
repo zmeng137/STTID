@@ -6,13 +6,14 @@ echo "Building STTID project..."
 
 # Build C++/CUDA STTID
 echo "Building STTID..."
-cd Cpp
+cd src
 rm -rf build
 mkdir build
 cd build
 cmake ..
 make
 cd ..
+echo "STTID Build complete! Find executables in STTID/src/build/exe/ or STTID/exe/"
 
 # Build Dense TT-ID
 echo "Building Dense TT-ID..."
@@ -23,7 +24,7 @@ cd build
 cmake ..
 make
 cd ../..
+echo "Dense TT-ID Build complete!"
 
-echo "Build complete!"
-echo "STTID executables: Cpp/build/"
-echo "Dense TT-ID executables: ttid/build/"
+echo "STTID executables: STTID/src/build/exe/ or STTID/exe/"
+echo "Dense TT-ID executables: STTID/ttid/build/exe/ or STTID/exe/"
